@@ -73,24 +73,16 @@ const find_user_by_phone = async (phone: number) => {
 //  2 DB Call
 const handle_login = async (password: string, value: number | string) => {
   try {
-    let user;
-    let whereCondition;
+    const whereCondition =
+      typeof value === "number"
+        ? eq(user_model.phone, value)
+        : eq(user_model.email, value);
 
-    if (typeof value === "number") {
-      whereCondition = eq(user_model.phone, value);
-      user = await db
-        .select()
-        .from(user_model)
-        .where(whereCondition)
-        .then((res) => res[0]);
-    } else {
-      whereCondition = eq(user_model.email, value);
-      user = await db
-        .select()
-        .from(user_model)
-        .where(whereCondition)
-        .then((res) => res[0]);
-    }
+    const user = await db
+      .select()
+      .from(user_model)
+      .where(whereCondition)
+      .then((res) => res[0]);
 
     if (!user) {
       return {
@@ -103,10 +95,10 @@ const handle_login = async (password: string, value: number | string) => {
     if (!user.hashed_password) {
       return {
         success: false,
-        code: 404,
+        code: 403,
         message: "Account is not password protected",
         help: {
-          message: "Login via OTP?",
+          message: "Login via OTP!",
           link: `${process.env.FRONTEND_URL}/otp-login`,
         },
       };
@@ -127,7 +119,6 @@ const handle_login = async (password: string, value: number | string) => {
     const access_token = generate_jwt(user.id, user.role);
     const refresh_token = generate_refresh_jwt(user.id, user.role);
 
-    // Update the refresh_token
     await db.update(user_model).set({ refresh_token }).where(whereCondition);
 
     return {
@@ -135,33 +126,24 @@ const handle_login = async (password: string, value: number | string) => {
       code: 200,
       message: "Login successful",
       data: {
+        id: user.id,
         name: user.name,
         role: user.role,
         phone: user.phone,
+        email: user.email,
         refresh_token,
         access_token,
-        email: user.email,
       },
     };
   } catch (error: any) {
-    console.log("Login error:", error);
+    console.error("Login error:", error);
     return {
       success: false,
       code: 500,
-      message: "Error in handling login",
+      message: "Internal server error during login",
     };
   }
 };
-
-
-
-
-
-
-
-
-
-
 
 const handle_google_callback = async ({ query, set }: any) => {
   try {
@@ -184,7 +166,7 @@ const handle_google_callback = async ({ query, set }: any) => {
       return "Missing role in OAuth state";
     }
 
-    const { id_token, access_token } = await get_tokens(query.code);
+    const { id_token } = await get_tokens(query.code);
     if (!id_token) {
       return {
         success: false,
@@ -193,7 +175,6 @@ const handle_google_callback = async ({ query, set }: any) => {
       };
     }
     const data = await get_user_info(id_token);
-
     if (!data || !data.email || !data.name) {
       set.status = 500;
       return "Error: Incomplete user info from Google.";
@@ -209,27 +190,53 @@ const handle_google_callback = async ({ query, set }: any) => {
 
     // Login
     if (exisiting_user) {
-      await db.update(user_model).set({
-        refresh_token: id_token,
-      });
-      return Response.redirect(
-        `${process.env.FRONTEND_URL}/${role}/dashboard`,
-        302
-      );
+      const refresh_token = generate_refresh_jwt(exisiting_user.id, role);
+      const access_token = generate_jwt(exisiting_user.id, role);
+      await db
+        .update(user_model)
+        .set({
+          refresh_token: refresh_token,
+        })
+        .where(eq(user_model.email, data.email));
+      return {
+        success: true,
+        code: 200,
+        message: "Login successful",
+        data: {
+          id: exisiting_user.id,
+          name: exisiting_user.name,
+          refresh_token,
+          access_token,
+        },
+        redirect: `${process.env.FRONTEND_URL}/${role}/dashboard`,
+      };
     } else {
       // Signup
       const user_id = `user_${Date.now()}${Math.random()
         .toString(36)
         .slice(2, 6)}`;
+      const refresh_token = generate_refresh_jwt(user_id, role);
+      const access_token = generate_jwt(user_id, role);
       await db.insert(user_model).values({
         id: user_id,
         name: data.name,
         role: role as RoleType,
         email: data.email,
-        refresh_token: id_token,
+        refresh_token: refresh_token,
         profile_pic: data.profile_pic,
       });
-      return Response.redirect(`${process.env.FRONTEND_URL}/${role}`, 302);
+      return {
+        success: true,
+        code: 200,
+        message: "Login successful",
+        data: {
+          id: user_id,
+          name: data.name,
+          refresh_token,
+          access_token,
+        },
+        redirect: `${process.env.FRONTEND_URL}/${role}`,
+      };
     }
   } catch (error) {
     console.error("[SERVER.AUTH] Error in Google callback:", error);

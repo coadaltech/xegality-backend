@@ -100,6 +100,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
   )
 
   // login routes
+  // 1
   .post(
     "/login",
     async ({ body, set, cookie }) => {
@@ -143,12 +144,23 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         };
       }
       const response = await handle_login(body.password, value);
-      if (response.success && response.data?.refresh_token) {
+      if (
+        response.success &&
+        response.data?.refresh_token &&
+        response.data?.access_token
+      ) {
         cookie["refresh_token"].set({
           value: response.data.refresh_token,
           httpOnly: true,
           secure: true,
           maxAge: 60 * 60 * 24 * 7,
+          path: "/",
+        });
+        cookie["access_token"].set({
+          value: response.data.access_token,
+          httpOnly: true,
+          secure: true,
+          maxAge: 60 * 15,
           path: "/",
         });
       }
@@ -158,24 +170,16 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     },
     { body: LoginSchema }
   )
-  // .post(
-  //   "/generate-otp",
-  //   async ({ body, set }) => {
-  //     const otpResponse = await generate_otp(body.phone);
-  //     set.status = otpResponse.code;
-  //     return otpResponse;
-  //   },
-  //   {
-  //     body: t.Object({
-  //       phone: t.Number(),
-  //     }),
-  //   }
-  // )
 
   // google login routes
   .get("/google-login", ({ query }) => {
     const { role } = query;
-    if (!role) return "Missing role in query";
+    if (!role) {
+      return { succes: false, code: 404, message: "Missing Role In Query" };
+    }
+    if (role !== "consumer" && role !== "lawyer" && role !== "student") {
+      return { succes: false, code: 404, message: "Invalid Role In Query" };
+    }
     return get_consent_url(role);
   })
   .get(
@@ -184,6 +188,8 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       const response = await handle_google_callback({
         query,
       });
+      console.log(response);
+      
       return response;
     },
     {
