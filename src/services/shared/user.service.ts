@@ -6,71 +6,13 @@ import {
   compare_password,
   generate_jwt,
   generate_refresh_jwt,
-  hash_password,
   random_otp,
+  verify_refresh_token,
 } from "../../utils";
-import { redirect, t } from "elysia";
 import { get_tokens, get_user_info } from "./google.service";
 import { JwtPayload } from "jsonwebtoken";
 import { otp_model } from "../../models/shared/otp.model";
-import { find_otp_by_email, find_otp_by_phone } from "./otp.service";
 
-//  1 DB Call
-const find_user_by_email = async (email: string) => {
-  try {
-    const exisiting_user = (
-      await db
-        .select()
-        .from(user_model)
-        .where(eq(user_model.email, email))
-        .limit(1)
-    )[0];
-    if (!exisiting_user) {
-      return { success: false, code: 404, message: "No Such User" };
-    }
-    return {
-      success: true,
-      code: 200,
-      message: "User Exists",
-      data: exisiting_user,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      code: 500,
-      message: "Error in finding user by email",
-    };
-  }
-};
-//  1 DB Call
-const find_user_by_phone = async (phone: number) => {
-  try {
-    const exisiting_user = (
-      await db
-        .select()
-        .from(user_model)
-        .where(eq(user_model.phone, phone))
-        .limit(1)
-    )[0];
-    if (!exisiting_user) {
-      return { success: false, code: 404, message: "No Such User" };
-    }
-    return {
-      success: true,
-      code: 200,
-      message: "User Exists",
-      data: exisiting_user,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      code: 500,
-      message: "Error in finding user by phone",
-    };
-  }
-};
-
-//  2 DB Call
 const handle_login = async (password: string, value: number | string) => {
   try {
     const whereCondition =
@@ -144,7 +86,86 @@ const handle_login = async (password: string, value: number | string) => {
     };
   }
 };
+const create_tokens = async (id: string, role: string) => {
+  try {
+    const new_access_token = generate_jwt(id, role);
+    const new_refresh_token = generate_refresh_jwt(id, role);
+    await db.update(user_model).set({ refresh_token: new_refresh_token });
+    return {
+      success: true,
+      code: 200,
+      message: "New Tokens Generated and Stored",
+      data: {
+        new_access_token,
+        new_refresh_token,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR: create_tokens",
+    };
+  }
+};
+const verify_token_with_db = async (refresh_token: string) => {
+  try {
+    const data = verify_refresh_token(refresh_token);
+    if (!data.valid) {
+      return {
+        success: false,
+        code: 404,
+        message: "Invalid Refresh Token",
+      };
+    }
+    if (
+      !data.payload ||
+      typeof data.payload === "string" ||
+      typeof data.payload.id !== "string" ||
+      typeof data.payload.role !== "string"
+    ) {
+      return {
+        success: false,
+        code: 400,
+        message: "Invalid payload in refresh token",
+      };
+    }
+    const res: { id: string; role: string } = {
+      id: data.payload.id,
+      role: data.payload.role,
+    };
 
+    const token_exists = (
+      await db
+        .select({ refresh_token: user_model.refresh_token })
+        .from(user_model)
+        .where(eq(user_model.id, res.id))
+    )[0];
+
+    if (refresh_token !== token_exists.refresh_token) {
+      return {
+        success: false,
+        code: 404,
+        message: "Refresh Token Expired",
+      };
+    }
+    return {
+      success: true,
+      code: 200,
+      message: "Refresh Token Matched",
+      data: {
+        id: data.payload.id,
+        role: data.payload.role,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR: verify_token_with_db",
+    };
+  }
+};
 const handle_google_callback = async ({ query, set }: any) => {
   try {
     if (!query.code || typeof query.code !== "string") {
@@ -342,16 +363,12 @@ const otp_cycle = async (value: string | number) => {
     };
   }
 };
-const querySchema = t.Object({
-  code: t.String(),
-});
 
 export {
+  create_tokens,
   handle_login_by_token,
-  find_user_by_email,
-  find_user_by_phone,
   handle_login,
   otp_cycle,
   handle_google_callback,
-  querySchema,
+  verify_token_with_db,
 };

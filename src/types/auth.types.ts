@@ -33,7 +33,10 @@ const LoginSchema = t.Object({
   phone: t.Optional(t.Number()),
   email: t.Optional(t.String()),
 });
-
+type JWTUser = {
+  id: string;
+  role: string;
+};
 type RoleType = "consumer" | "lawyer" | "student";
 type OtpType = (typeof OtpSchema)["static"];
 type SignUpType = (typeof UserSchema)["static"];
@@ -41,9 +44,10 @@ type SignUpType = (typeof UserSchema)["static"];
 export {
   SignUpType,
   OtpType,
+  JWTUser,
+  RoleType,
   OtpSchema,
   UserSchema,
-  RoleType,
   SignupSchema,
   LoginSchema,
 };

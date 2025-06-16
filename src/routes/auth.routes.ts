@@ -1,27 +1,18 @@
 import { Elysia, t } from "elysia";
 import {
+  create_tokens,
   handle_google_callback,
   handle_login,
   handle_login_by_token,
   otp_cycle,
+  verify_token_with_db,
 } from "../services/shared/user.service";
-import {
-  create_user,
-  generate_otp,
-  verify_otp,
-} from "../services/shared/otp.service";
-import {
-  LoginSchema,
-  OtpSchema,
-  RoleType,
-  SignupSchema,
-} from "../types/auth.types";
-import {
-  get_consent_url,
-  get_tokens,
-  get_user_info,
-} from "../services/shared/google.service";
-import { random_otp, verify_refresh_token } from "../utils";
+import { create_user, verify_otp } from "../services/shared/otp.service";
+import { LoginSchema, OtpSchema, SignupSchema } from "../types/auth.types";
+import { get_consent_url } from "../services/shared/google.service";
+import { verify_refresh_token } from "../utils";
+// import db from "../config/db";
+import { user_model } from "../models/shared/user.model";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
 
@@ -97,6 +88,32 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       return creating_user_response;
     },
     { body: OtpSchema }
+  )
+
+  // refresh token route
+  .post(
+    "/refresh-tokens",
+    async ({ body, set }) => {
+      const refresh_token = body.refresh_token;
+
+      const validation_response = await verify_token_with_db(refresh_token);
+      console.log(validation_response);
+      if (!validation_response.success) {
+        set.status = validation_response.code;
+        return validation_response;
+      }
+      const data = await create_tokens(
+        validation_response.data?.id!,
+        validation_response.data?.role!
+      );
+      set.status = data.code;
+      return data;
+    },
+    {
+      body: t.Object({
+        refresh_token: t.String(),
+      }),
+    }
   )
 
   // login routes
@@ -189,7 +206,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         query,
       });
       console.log(response);
-      
+
       return response;
     },
     {
@@ -201,9 +218,10 @@ const auth_routes = new Elysia({ prefix: "/auth" })
   )
 
   // logout route
-  .post("/logout", async ({ cookie, set }) => {
+  .get("/logout", async ({ cookie, set }) => {
     const existing_token = cookie["refresh_token"].value;
-    if (!existing_token) {
+    const access_token = cookie["access_token"].value;
+    if (!existing_token && !access_token) {
       set.status = 404;
       return {
         success: true,
@@ -211,6 +229,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       };
     }
     cookie["refresh_token"].remove();
+    cookie["access_token"].remove();
     set.status = 200;
     return {
       success: true,

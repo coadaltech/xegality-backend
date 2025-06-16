@@ -4,46 +4,10 @@ import {
   generate_jwt,
   generate_refresh_jwt,
   hash_password,
-  random_otp,
 } from "../../utils";
 import { eq } from "drizzle-orm";
-import { find_user_by_phone } from "./user.service";
 import { RoleType } from "../../types/auth.types";
 import { user_model } from "../../models/shared/user.model";
-
-//  3 DB Call
-const generate_otp = async (phone: number) => {
-  try {
-    const user_result = await find_user_by_phone(phone);
-    if (user_result.data) {
-      return user_result;
-    }
-    const otp = random_otp();
-
-    const otp_result = await find_otp_by_phone(phone);
-    if (otp_result.code == 200 && otp_result.success) {
-      await db.update(otp_model).set({ otp });
-    } else {
-      await db.insert(otp_model).values({
-        otp: otp,
-        phone: phone,
-      });
-    }
-    return {
-      success: true,
-      code: 200,
-      message: "OTP Generated Successfully",
-      otp,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      code: 500,
-      message: "ERROR : generate_otp",
-    };
-  }
-};
-//  2 DB Call
 
 const create_user = async (
   name: string,
@@ -154,7 +118,8 @@ const verify_otp = async (otp: number, value: string | number) => {
     console.error(error);
     return { success: false, code: 500, message: "ERROR : verify_otp" };
   }
-}; //  1 DB Call
+};
+
 const find_otp_by_phone = async (phone: number) => {
   try {
     const exisiting_otp = (
@@ -199,10 +164,4 @@ const find_otp_by_email = async (email: string) => {
     return { success: false, code: 500, message: "ERROR : find_otp_by_otp" };
   }
 };
-export {
-  generate_otp,
-  verify_otp,
-  find_otp_by_phone,
-  find_otp_by_email,
-  create_user,
-};
+export { verify_otp, find_otp_by_phone, find_otp_by_email, create_user };

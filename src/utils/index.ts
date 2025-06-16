@@ -8,6 +8,7 @@ const random_otp = () => {
 const verify_refresh_token = (token: string) => {
   try {
     const payload = jwt.verify(token, process.env.ACCESS_KEY || "heymama");
+
     return { valid: true, payload };
   } catch (err) {
     return { valid: false };
@@ -20,7 +21,7 @@ const hash_password = async (password: string): Promise<string> => {
 };
 const generate_jwt = (id: string, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
-    expiresIn: "1m",
+    expiresIn: "1h",
   });
 };
 const verify_jwt = (token: string) => {
@@ -28,7 +29,7 @@ const verify_jwt = (token: string) => {
 };
 const generate_refresh_jwt = (id: string, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
-    expiresIn: "7d",
+    expiresIn: "5m",
   });
 };
 const compare_password = async (password: string, hashed_password: string) => {
