@@ -7,9 +7,13 @@ import {
   generate_jwt,
   generate_refresh_jwt,
   hash_password,
+  random_otp,
 } from "../../utils";
 import { redirect, t } from "elysia";
 import { get_tokens, get_user_info } from "./google.service";
+import { JwtPayload } from "jsonwebtoken";
+import { otp_model } from "../../models/shared/otp.model";
+import { find_otp_by_email, find_otp_by_phone } from "./otp.service";
 
 //  1 DB Call
 const find_user_by_email = async (email: string) => {
@@ -65,84 +69,28 @@ const find_user_by_phone = async (phone: number) => {
     };
   }
 };
-//  1 DB Call
-const handle_signup = async (
-  name: string,
-  password: string,
-  phone: number,
-  role: RoleType,
-  email?: string
-) => {
-  try {
-    const hashed_password = await hash_password(password);
-    const access_token = generate_jwt(phone, role);
-    const refresh_token = generate_refresh_jwt(phone, role);
 
-    await db
-      .insert(user_model)
-      .values({
-        name,
-        role,
-        phone,
-        refresh_token,
-        email,
-        hashed_password,
-      })
-      .returning();
-    return {
-      success: true,
-      code: 200,
-      message: "User Created Successfully",
-      data: {
-        name,
-        role,
-        phone,
-        refresh_token,
-        access_token,
-        email,
-        hashed_password,
-      },
-    };
-  } catch (error: any) {
-    if (error?.cause?.code === "23505") {
-      return {
-        success: false,
-        code: 409,
-        message: "Phone number already exists",
-      };
-    }
-
-    return {
-      success: false,
-      code: 500,
-      message: "Error in handling signup",
-    };
-  }
-};
 //  2 DB Call
-const handle_login = async (
-  password: string,
-  phone?: number,
-  email?: string
-) => {
+const handle_login = async (password: string, value: number | string) => {
   try {
-    if (!email && !phone) {
-      return {
-        success: false,
-        code: 404,
-        message: "Login with either email or phone",
-      };
+    let user;
+    let whereCondition;
+
+    if (typeof value === "number") {
+      whereCondition = eq(user_model.phone, value);
+      user = await db
+        .select()
+        .from(user_model)
+        .where(whereCondition)
+        .then((res) => res[0]);
+    } else {
+      whereCondition = eq(user_model.email, value);
+      user = await db
+        .select()
+        .from(user_model)
+        .where(whereCondition)
+        .then((res) => res[0]);
     }
-
-    const whereCondition = phone
-      ? eq(user_model.phone, phone)
-      : eq(user_model.email, email!);
-
-    const user = await db
-      .select()
-      .from(user_model)
-      .where(whereCondition)
-      .then((res) => res[0]);
 
     if (!user) {
       return {
@@ -151,16 +99,22 @@ const handle_login = async (
         message: "User not found",
       };
     }
+
     if (!user.hashed_password) {
       return {
         success: false,
         code: 404,
         message: "Account is not password protected",
+        help: {
+          message: "Login via OTP?",
+          link: `${process.env.FRONTEND_URL}/otp-login`,
+        },
       };
     }
+
     const isPasswordCorrect = await compare_password(
       password,
-      user.hashed_password!
+      user.hashed_password
     );
     if (!isPasswordCorrect) {
       return {
@@ -170,9 +124,10 @@ const handle_login = async (
       };
     }
 
-    const access_token = generate_jwt(user.phone!, user.role);
-    const refresh_token = generate_refresh_jwt(user.phone!, user.role);
+    const access_token = generate_jwt(user.id, user.role);
+    const refresh_token = generate_refresh_jwt(user.id, user.role);
 
+    // Update the refresh_token
     await db.update(user_model).set({ refresh_token }).where(whereCondition);
 
     return {
@@ -183,8 +138,8 @@ const handle_login = async (
         name: user.name,
         role: user.role,
         phone: user.phone,
-        refresh_token: refresh_token,
-        access_token: access_token,
+        refresh_token,
+        access_token,
         email: user.email,
       },
     };
@@ -197,7 +152,17 @@ const handle_login = async (
     };
   }
 };
-const existing_user = async (phone?: number, email?: string) => {};
+
+
+
+
+
+
+
+
+
+
+
 const handle_google_callback = async ({ query, set }: any) => {
   try {
     if (!query.code || typeof query.code !== "string") {
@@ -253,7 +218,11 @@ const handle_google_callback = async ({ query, set }: any) => {
       );
     } else {
       // Signup
+      const user_id = `user_${Date.now()}${Math.random()
+        .toString(36)
+        .slice(2, 6)}`;
       await db.insert(user_model).values({
+        id: user_id,
         name: data.name,
         role: role as RoleType,
         email: data.email,
@@ -268,17 +237,114 @@ const handle_google_callback = async ({ query, set }: any) => {
     return "Error during authentication.";
   }
 };
+const handle_login_by_token = async (payload: JwtPayload) => {
+  try {
+    const { id, role } = payload;
 
-// Use this query validator with Elysia
+    const access_token = generate_jwt(id, role);
+    const refresh_token = generate_refresh_jwt(id, role);
+
+    const updated_user = await db
+      .update(user_model)
+      .set({ refresh_token })
+      .where(eq(user_model.id, id))
+      .returning({
+        id: user_model.id,
+        name: user_model.name,
+        role: user_model.role,
+      })
+      .then((rows) => rows[0]);
+
+    if (!updated_user) {
+      return {
+        success: false,
+        code: 404,
+        message: "User not found",
+      };
+    }
+
+    return {
+      success: true,
+      code: 200,
+      message: "Logged in via refresh token",
+      data: {
+        id: updated_user.id,
+        name: updated_user.name,
+        access_token,
+        refresh_token,
+      },
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      code: 500,
+      message: "Error logging in with token",
+      error: error?.message,
+    };
+  }
+};
+
+const otp_cycle = async (value: string | number) => {
+  const otp = random_otp();
+
+  if (typeof value === "number") {
+    // Handle phone login
+    const existing = (
+      await db
+        .select()
+        .from(otp_model)
+        .where(eq(otp_model.phone, value))
+        .limit(1)
+    )[0];
+
+    if (existing) {
+      await db.update(otp_model).set({ otp }).where(eq(otp_model.phone, value));
+    } else {
+      await db.insert(otp_model).values({
+        otp,
+        phone: value,
+      });
+    }
+    return {
+      success: true,
+      code: 200,
+      message: `OTP sent to phone: ${value}`,
+    };
+  } else {
+    // Handle phone login
+    const existing = (
+      await db
+        .select()
+        .from(otp_model)
+        .where(eq(otp_model.email, value))
+        .limit(1)
+    )[0];
+
+    if (existing) {
+      await db.update(otp_model).set({ otp }).where(eq(otp_model.email, value));
+    } else {
+      await db.insert(otp_model).values({
+        otp,
+        email: value,
+      });
+    }
+    return {
+      success: true,
+      code: 200,
+      message: `OTP sent to email: ${value}`,
+    };
+  }
+};
 const querySchema = t.Object({
   code: t.String(),
 });
 
 export {
+  handle_login_by_token,
   find_user_by_email,
   find_user_by_phone,
-  handle_signup,
   handle_login,
+  otp_cycle,
   handle_google_callback,
   querySchema,
 };

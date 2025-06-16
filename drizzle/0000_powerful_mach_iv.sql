@@ -7,7 +7,7 @@ CREATE TABLE "otps" (
 );
 --> statement-breakpoint
 CREATE TABLE "users" (
-	"id" serial PRIMARY KEY NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"name" text,
 	"role" "role" NOT NULL,
 	"phone" bigint,

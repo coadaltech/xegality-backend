@@ -1,8 +1,16 @@
 import { t } from "elysia";
 
 const OtpSchema = t.Object({
+  name: t.String(),
+  password: t.String(),
+  phone: t.Optional(t.Number()),
+  role: t.Enum({
+    consumer: "consumer",
+    lawyer: "lawyer",
+    student: "student",
+  }),
+  email: t.Optional(t.String()),
   otp: t.Number(),
-  phone: t.Number(),
 });
 const UserSchema = t.Object({
   name: t.String(),
@@ -17,14 +25,7 @@ const UserSchema = t.Object({
 });
 
 const SignupSchema = t.Object({
-  name: t.String(),
-  password: t.String(),
-  phone: t.Number(),
-  role: t.Enum({
-    consumer: "consumer",
-    lawyer: "lawyer",
-    student: "student",
-  }),
+  phone: t.Optional(t.Number()),
   email: t.Optional(t.String()),
 });
 const LoginSchema = t.Object({

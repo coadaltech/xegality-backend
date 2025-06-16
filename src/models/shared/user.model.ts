@@ -10,7 +10,7 @@ import {
 const UserTypeEnum = pgEnum("role", ["consumer", "lawyer", "student"]);
 
 const user_model = pgTable("users", {
-  id: serial().primaryKey(),
+  id: text("id").primaryKey(),
   name: text(),
   role: UserTypeEnum().notNull(),
   phone: bigint({ mode: "number" }).unique(),
