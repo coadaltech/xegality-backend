@@ -3,7 +3,7 @@ import "dotenv/config";
 import bcrypt from "bcrypt";
 
 const random_otp = () => {
-  return Math.floor(1000 + Math.random() * 9000);
+  return Math.floor(100000 + Math.random() * 900000);
 };
 const verify_refresh_token = (token: string) => {
   try {

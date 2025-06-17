@@ -1,6 +1,6 @@
 import { t } from "elysia";
 
-const OtpSchema = t.Object({
+const VerifyUserSchema = t.Object({
   name: t.String(),
   password: t.String(),
   phone: t.Optional(t.Number()),
@@ -23,8 +23,11 @@ const UserSchema = t.Object({
   }),
   email: t.Optional(t.String()),
 });
-
-const SignupSchema = t.Object({
+const GoogleCallbackSchema = t.Object({
+  code: t.String(),
+  state: t.String(),
+});
+const GenerateOtpSchema = t.Object({
   phone: t.Optional(t.Number()),
   email: t.Optional(t.String()),
 });
@@ -38,7 +41,7 @@ type JWTUser = {
   role: string;
 };
 type RoleType = "consumer" | "lawyer" | "student";
-type OtpType = (typeof OtpSchema)["static"];
+type OtpType = (typeof VerifyUserSchema)["static"];
 type SignUpType = (typeof UserSchema)["static"];
 
 export {
@@ -46,8 +49,9 @@ export {
   OtpType,
   JWTUser,
   RoleType,
-  OtpSchema,
+  VerifyUserSchema,
   UserSchema,
-  SignupSchema,
+  GenerateOtpSchema,
   LoginSchema,
+  GoogleCallbackSchema,
 };

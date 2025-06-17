@@ -1,8 +1,8 @@
-import { integer, serial, pgTable, text } from "drizzle-orm/pg-core";
+import { integer, serial, pgTable, text, bigint } from "drizzle-orm/pg-core";
 
 const otp_model = pgTable("otps", {
   id: serial().primaryKey(),
-  phone: integer("phone"),
+  phone: bigint({ mode: "number" }).unique(),
   email: text("email"),
   otp: integer("otp"),
 });
