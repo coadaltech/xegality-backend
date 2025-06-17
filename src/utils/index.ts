@@ -29,7 +29,7 @@ const verify_jwt = (token: string) => {
 };
 const generate_refresh_jwt = (id: string, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
-    expiresIn: "5m",
+    expiresIn: "7d",
   });
 };
 const compare_password = async (password: string, hashed_password: string) => {

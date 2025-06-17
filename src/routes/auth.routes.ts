@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, redirect } from "elysia";
 import {
   create_tokens,
   handle_google_callback,
@@ -13,11 +13,12 @@ import {
   VerifyUserSchema,
   GenerateOtpSchema,
   GoogleCallbackSchema,
+  VerifyLoginOtpSchema,
 } from "../types/auth.types";
 import { get_consent_url } from "../services/shared/google.service";
 import { verify_refresh_token } from "../utils";
 
-const public_routes = new Elysia({ prefix: "/public" })
+const auth_routes = new Elysia({ prefix: "/auth" })
 
   // SIGNUP
   .post(
@@ -51,7 +52,7 @@ const public_routes = new Elysia({ prefix: "/public" })
   )
   .post(
     "/verify-user",
-    async ({ body, set }) => {
+    async ({ body, set, cookie }) => {
       const { phone, email } = body;
       if (!phone && !email) {
         set.status = 400;
@@ -87,6 +88,27 @@ const public_routes = new Elysia({ prefix: "/public" })
         return creating_user_response;
       }
       set.status = creating_user_response.code;
+      if (
+        creating_user_response.success &&
+        creating_user_response.data?.refresh_token &&
+        creating_user_response.data?.access_token
+      ) {
+        cookie["refresh_token"].set({
+          value: creating_user_response.data.refresh_token,
+          httpOnly: true,
+          secure: true,
+          maxAge: 60 * 60 * 24 * 7,
+          path: "/",
+        });
+        cookie["access_token"].set({
+          value: creating_user_response.data.access_token,
+          httpOnly: true,
+          secure: true,
+          maxAge: 60 * 15,
+          path: "/",
+        });
+      }
+
       return creating_user_response;
     },
     { body: VerifyUserSchema }
@@ -180,6 +202,35 @@ const public_routes = new Elysia({ prefix: "/public" })
     },
     { body: LoginSchema }
   )
+  .post(
+    "/verify-login-otp",
+    async ({ body, set }) => {
+      const { phone, email } = body;
+      if (!phone && !email) {
+        set.status = 400;
+        return {
+          success: false,
+          code: 404,
+          message: "Either phone or email must be provided.",
+        };
+      }
+
+      const value = phone ?? email;
+      if (!value) {
+        return {
+          success: false,
+          message: "Value is neither Phone nor Email",
+        };
+      }
+
+      const otpResponse = await verify_otp(body.otp, value);
+      if (otpResponse.success == false) {
+        set.status = otpResponse.code;
+        return otpResponse;
+      }
+    },
+    { body: VerifyLoginOtpSchema }
+  )
 
   // GOOGLE LOGIN
   .get("/google-login", ({ query }) => {
@@ -190,16 +241,36 @@ const public_routes = new Elysia({ prefix: "/public" })
     if (role !== "consumer" && role !== "lawyer" && role !== "student") {
       return { succes: false, code: 404, message: "Invalid Role In Query" };
     }
-    return get_consent_url(role);
+    const link = get_consent_url(role);
+    return { link };
   })
   .get(
     "/google-callback",
-    async ({ query }) => {
+    async ({ query, cookie }) => {
       const response = await handle_google_callback({
         query,
       });
       console.log(response);
-
+      if (
+        response.success &&
+        response.data?.refresh_token &&
+        response.data?.access_token
+      ) {
+        cookie["refresh_token"].set({
+          value: response.data.refresh_token,
+          httpOnly: true,
+          secure: true,
+          maxAge: 60 * 60 * 24 * 7,
+          path: "/",
+        });
+        cookie["access_token"].set({
+          value: response.data.access_token,
+          httpOnly: true,
+          secure: true,
+          maxAge: 60 * 15,
+          path: "/",
+        });
+      }
       return response;
     },
     {
@@ -226,4 +297,5 @@ const public_routes = new Elysia({ prefix: "/public" })
       message: "Logged Out Successfully",
     };
   });
-export default public_routes;
+
+export default auth_routes;

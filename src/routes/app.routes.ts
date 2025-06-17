@@ -1,8 +1,8 @@
-import { Elysia} from "elysia";
+import { Elysia } from "elysia";
 import { JWTUser } from "../types/auth.types";
 import { authenticate_jwt } from "../middlewares";
 
-const private_routes = new Elysia({ prefix: "/private" }).guard(
+const app_routes = new Elysia({ prefix: "/app" }).guard(
   {
     beforeHandle({ cookie, set }) {
       let access_token = String(cookie.access_token);
@@ -33,4 +33,4 @@ const private_routes = new Elysia({ prefix: "/private" }).guard(
       }))
 );
 
-export default private_routes;
+export default app_routes;

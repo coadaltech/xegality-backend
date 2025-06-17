@@ -170,7 +170,11 @@ const handle_google_callback = async ({ query, set }: any) => {
   try {
     if (!query.code || typeof query.code !== "string") {
       set.status = 400;
-      return "Error: Invalid or missing code parameter.";
+      return {
+        success: false,
+        code: 404,
+        message: "Error: Invalid or missing code parameter.",
+      };
     }
 
     const state = query.state;
@@ -179,12 +183,20 @@ const handle_google_callback = async ({ query, set }: any) => {
       role = JSON.parse(state)?.role;
     } catch {
       set.status = 400;
-      return "Invalid state parameter";
+      return {
+        success: false,
+        code: 404,
+        message: "Invalid state parameter",
+      };
     }
 
     if (!role) {
       set.status = 400;
-      return "Missing role in OAuth state";
+      return {
+        success: false,
+        code: 404,
+        message: "Missing role in OAuth state",
+      };
     }
 
     const { id_token } = await get_tokens(query.code);
@@ -198,7 +210,11 @@ const handle_google_callback = async ({ query, set }: any) => {
     const data = await get_user_info(id_token);
     if (!data || !data.email || !data.name) {
       set.status = 500;
-      return "Error: Incomplete user info from Google.";
+      return {
+        success: false,
+        code: 404,
+        message: "Error: Incomplete user info from Google.",
+      };
     }
 
     const exisiting_user = (
@@ -262,7 +278,11 @@ const handle_google_callback = async ({ query, set }: any) => {
   } catch (error) {
     console.error("[SERVER.AUTH] Error in Google callback:", error);
     set.status = 500;
-    return "Error during authentication.";
+    return {
+      success: true,
+      code: 200,
+      message: "Error during authentication.",
+    };
   }
 };
 const handle_login_by_token = async (payload: JwtPayload) => {

@@ -1,5 +1,11 @@
 import { t } from "elysia";
 
+const VerifyLoginOtpSchema = t.Object({
+  phone: t.Optional(t.Number()),
+  email: t.Optional(t.String()),
+  otp: t.Number(),
+});
+
 const VerifyUserSchema = t.Object({
   name: t.String(),
   password: t.String(),
@@ -54,4 +60,5 @@ export {
   GenerateOtpSchema,
   LoginSchema,
   GoogleCallbackSchema,
+  VerifyLoginOtpSchema,
 };

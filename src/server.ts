@@ -1,8 +1,8 @@
 import { Elysia } from "elysia";
 import "dotenv/config";
 import cors from "@elysiajs/cors";
-import private_routes from "./routes/private.routes";
-import public_routes from "./routes/public.routes";
+import app_routes from "./routes/app.routes";
+import auth_routes from "./routes/auth.routes";
 
 const SERVER_PORT = process.env.SERVER_PORT;
 if (!SERVER_PORT) {
@@ -16,8 +16,8 @@ const app = new Elysia({ prefix: "/api" })
       credentials: true,
     })
   )
-  .use(public_routes)
-  .use(private_routes)
+  .use(auth_routes)
+  .use(app_routes)
   .listen(SERVER_PORT);
 
 console.log(`[SERVER]   at http://localhost:${app.server?.port}`);
