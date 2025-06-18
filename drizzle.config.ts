@@ -11,6 +11,6 @@ export default defineConfig({
     password: process.env.DB_PASSWORD || "xegality",
     database: process.env.DB_NAME || "xegality_db",
   },
-  schema: ["./src/models/*"]
-})
+  schema: ["./src/models/**/*.ts"],
+});
 

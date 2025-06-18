@@ -17,37 +17,12 @@ const PostInternshipSchema = t.Object({
   is_remote: t.Optional(t.Boolean()), // `.default(false)` in Drizzle
   accepts_international: t.Optional(t.Boolean()),
   provides_housing: t.Optional(t.Boolean()),
-  contact_person: t.String(),
-  contact_email: t.String(),
+  employer_id: t.String(),
+  employer_email: t.String(),
   posted_date: t.Optional(t.Date()), // `.defaultNow()` makes it optional
   applicants_till_now: t.Optional(t.Number()), // integer default(0)
   views: t.Optional(t.Number()),
   rating: t.Optional(t.Number()), // real default(0)
 });
-type InternshipType = {
-  id?: string;
-  title?: string;
-  firm_name?: string;
-  location?: string;
-  department?: string;
-  position_type?: string;
-  duration?: string;
-  compensation_type?: string;
-  salary_amount?: string;
-  start_date?: Date;
-  application_deadline?: Date;
-  description?: string;
-  requirements?: string[];
-  benefits?: string[];
-  is_remote?: boolean;
-  accepts_international?: boolean;
-  provides_housing?: boolean;
-  employer_id?: string;
-  employer_email?: string;
-  posted_date?: Date;
-  applicants_till_now?: number;
-  views?: number;
-  rating?: number;
-};
 
-export { PostInternshipSchema, InternshipType };
+export { PostInternshipSchema};

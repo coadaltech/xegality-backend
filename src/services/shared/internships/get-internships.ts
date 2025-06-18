@@ -1,5 +1,6 @@
-import db from "../../config/db";
-import { internship_opportunity_model } from "../../models/shared/internship.model";
+import db from "../../../config/db";
+import { internship_opportunity_model } from "../../../models/shared/internship.model";
+
 
 export const get_internships = async () => {
   try {
@@ -9,8 +10,8 @@ export const get_internships = async () => {
 
     if (!internship_opportunities || internship_opportunities.length === 0) {
       return {
-        success: false,
-        code: 404,
+        success: true,
+        code: 200,
         message: "No internship opportunities found",
         data: [],
       };

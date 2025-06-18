@@ -29,7 +29,7 @@ export const internship_opportunity_model = pgTable(
     is_remote: boolean().default(false),
     accepts_international: boolean().default(false),
     provides_housing: boolean().default(false),
-    employer_id: text().unique().notNull(),
+    employer_id: text().notNull(),
     employer_email: text().notNull(),
     posted_date: timestamp({ withTimezone: true }).defaultNow(),
     applicants_till_now: integer().default(0),
