@@ -1,5 +1,7 @@
 import { t } from "elysia";
-
+const SearchInternshipSchema = t.Object({
+  query: t.String(),
+});
 const PostInternshipSchema = t.Object({
   title: t.String(),
   firm_name: t.String(),
@@ -25,4 +27,4 @@ const PostInternshipSchema = t.Object({
   rating: t.Optional(t.Number()), // real default(0)
 });
 
-export { PostInternshipSchema};
+export { PostInternshipSchema, SearchInternshipSchema };
