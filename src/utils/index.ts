@@ -14,6 +14,16 @@ const verify_refresh_token = (token: string) => {
     return { valid: false };
   }
 };
+
+const verify_access_token = (token: string) => {
+  try {
+    const payload = jwt.verify(token, process.env.ACCESS_KEY || "heymama");
+
+    return { valid: true, payload };
+  } catch (err) {
+    return { valid: false };
+  }
+};
 const hash_password = async (password: string): Promise<string> => {
   const SALT = 10;
   const hashed_password = await bcrypt.hash(password, SALT);
@@ -43,4 +53,5 @@ export {
   verify_jwt,
   compare_password,
   verify_refresh_token,
+  verify_access_token,
 };

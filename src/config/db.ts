@@ -27,7 +27,7 @@ const db_connect = () => {
     });
 
     const db = drizzle({ client: client });
-    console.log(`[DATABASE] at http://localhost:${process.env.DB_PORT}`);
+    console.log(`[DATABASE] http://localhost:${process.env.DB_PORT}`);
     return db;
   } catch (error) {
     console.error(error);

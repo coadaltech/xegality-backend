@@ -20,4 +20,4 @@ const app = new Elysia({ prefix: "/api" })
   .use(app_routes)
   .listen(SERVER_PORT);
 
-console.log(`[SERVER]   at http://localhost:${app.server?.port}`);
+console.log(`[SERVER]   http://localhost:${app.server?.port}`);
