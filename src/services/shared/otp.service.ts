@@ -17,7 +17,7 @@ const create_user = async (
   email?: string
 ) => {
   try {
-    const user_id = `user_${Date.now()}${Math.random()
+    const user_id = `${Date.now()}${Math.random()
       .toString(36)
       .slice(2, 6)}`;
     const hashed_password = await hash_password(password);

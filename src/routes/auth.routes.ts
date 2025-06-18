@@ -6,7 +6,7 @@ import {
   handle_login_by_token,
   otp_cycle,
   verify_token_with_db,
-} from "../services/shared/user.service";
+} from "../services/shared/auth.service";
 import { create_user, verify_otp } from "../services/shared/otp.service";
 import {
   LoginSchema,

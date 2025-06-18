@@ -10,13 +10,13 @@ import {
 const UserTypeEnum = pgEnum("role", ["consumer", "lawyer", "student"]);
 
 const user_model = pgTable("users", {
-  id: text("id").primaryKey(),
-  name: text(),
+  id: text().primaryKey(),
+  name: text().notNull(),
   role: UserTypeEnum().notNull(),
   phone: bigint({ mode: "number" }).unique(),
   email: text().unique(),
   hashed_password: text(),
-  refresh_token: text(),
+  refresh_token: text().notNull(),
   profile_pic: text(),
   created_at: timestamp().defaultNow(),
 });
