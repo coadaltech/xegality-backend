@@ -1,30 +1,41 @@
 import { t } from "elysia";
-const SearchInternshipSchema = t.Object({
+export const SearchInternshipSchema = t.Object({
   query: t.String(),
 });
-const PostInternshipSchema = t.Object({
+export const PostInternshipSchema = t.Object({
   title: t.String(),
-  firm_name: t.String(),
+  description: t.String(),
   location: t.String(),
-  department: t.String(),
-  position_type: t.String(),
+  specialization: t.String(),
+  designation: t.String(),
   duration: t.String(),
   compensation_type: t.Optional(t.String()),
   salary_amount: t.Optional(t.String()),
-  start_date: t.Date(), // Matches `timestamp` from Drizzle
-  application_deadline: t.Date(),
-  description: t.String(),
-  requirements: t.Array(t.String()), // `.array().notNull()` in Drizzle
-  benefits: t.Optional(t.Array(t.String())), // Optional array
-  is_remote: t.Optional(t.Boolean()), // `.default(false)` in Drizzle
-  accepts_international: t.Optional(t.Boolean()),
-  provides_housing: t.Optional(t.Boolean()),
-  employer_id: t.String(),
-  employer_email: t.String(),
-  posted_date: t.Optional(t.Date()), // `.defaultNow()` makes it optional
-  applicants_till_now: t.Optional(t.Number()), // integer default(0)
-  views: t.Optional(t.Number()),
-  rating: t.Optional(t.Number()), // real default(0)
+  application_deadline: t.String(),
+  requirements: t.Array(t.String()),
+  benefits: t.Array(t.String()),
+  posted_date: t.String(),
 });
-
-export { PostInternshipSchema, SearchInternshipSchema };
+export const PostInternSchema = t.Object({
+  name: t.String(),
+  email: t.String(),
+  phone: t.Number(), // Number with mode "number"
+  university: t.String(),
+  year: t.String(),
+  specialization: t.String(),
+  start_date: t.String({ format: "date-time" }), // timestamp
+  status: t.String(),
+  rating: t.Optional(t.Number()), // real
+  avatar: t.String(),
+  tasks_completed: t.Integer(),
+  hours_worked: t.Integer(),
+  performance: t.String(),
+  recent_activity: t.String(),
+  supervisor: t.String(),
+  department: t.String(),
+  contract_type: t.String(),
+  salary: t.String(),
+});
+export const ApplyInternshipSchema = t.Object({
+  internship_id: t.Number(),
+});

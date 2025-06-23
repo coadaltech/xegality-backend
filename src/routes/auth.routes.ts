@@ -143,13 +143,24 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     if (!refresh_token) {
       console.log(
         `[SERVER]   No Refresh Token Found : ${new Date().toLocaleString()}`
-      );
+      );      
       return {
         success: true,
         code: 404,
         message: "No Refresh Token",
       };
     }
+    if (refresh_token) {
+      console.log(
+        `[SERVER]   No Refresh Token Found : ${new Date().toLocaleString()}`
+      );
+    
+    return {
+      success: true,
+      code: 404,
+      message: "No Refresh Token",
+    };
+  }
     const validation_response = await verify_token_with_db(
       String(refresh_token)
     );
@@ -221,16 +232,17 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           console.log(
             `[SERVER]   Already Logged In : ${new Date().toLocaleString()}`
           );
-          return {
-            success: true,
-            code: 201,
-            message: "Already logged In",
-            data: {
-              id: login_response.data?.id,
-              name: login_response.data?.name,
-              access_token: login_response.data?.access_token,
-            },
-          };
+          // return {
+          //   success: true,
+          //   code: 201,
+          //   message: "Already logged In",
+          //   data: {
+          //     id: login_response.data?.id,
+          //     name: login_response.data?.name,
+          //     access_token: login_response.data?.access_token,
+          //   },
+          // };
+          return login_response;
         }
       }
       if (!body.phone && !body.email) {

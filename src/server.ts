@@ -1,8 +1,10 @@
 import { Elysia } from "elysia";
 import "dotenv/config";
 import cors from "@elysiajs/cors";
-import app_routes from "./routes/app.routes";
+import app_routes from "./routes/internship.routes";
 import auth_routes from "./routes/auth.routes";
+import internship_routes from "./routes/internship.routes";
+// import intern_routes from "./routes/intern.routes";
 
 const SERVER_PORT = process.env.SERVER_PORT;
 if (!SERVER_PORT) {
@@ -17,7 +19,12 @@ const app = new Elysia({ prefix: "/api" })
     })
   )
   .use(auth_routes)
-  .use(app_routes)
+  // .use(intern_routes)
+  .use(internship_routes)
   .listen(SERVER_PORT);
 
-console.log(`[SERVER]   http://localhost:${app.server?.port}`);
+console.log(
+  `[SERVER]   http://localhost:${
+    app.server?.port
+  } ${new Date().toLocaleString()}`
+);

@@ -1,39 +1,44 @@
-import {
-  pgTable,
-  text,
-  boolean,
-  timestamp,
-  integer,
-  real,
-} from "drizzle-orm/pg-core";
+import { bigint, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { user_model } from "./user.model";
 
-export const internship_opportunity_model = pgTable(
-  "internship_opportunities",
-  {
-    id: text().primaryKey(),
-    title: text().notNull(),
-    firm_name: text().notNull(),
-    location: text().notNull(),
-    department: text().notNull(),
-    position_type: text().notNull(),
-    duration: text().notNull(),
-    compensation_type: text(),
-    salary_amount: text(),
-    start_date: timestamp({ withTimezone: true }).notNull(),
-    application_deadline: timestamp({
-      withTimezone: true,
-    }).notNull(),
-    description: text().notNull(),
-    requirements: text().array().notNull(),
-    benefits: text().array(),
-    is_remote: boolean().default(false),
-    accepts_international: boolean().default(false),
-    provides_housing: boolean().default(false),
-    employer_id: text().notNull(),
-    employer_email: text().notNull(),
-    posted_date: timestamp({ withTimezone: true }).defaultNow(),
-    applicants_till_now: integer().default(0),
-    views: integer().default(0),
-    rating: real().default(0),
-  }
-);
+export const applied_internship_model = pgTable("applied_internships", {
+  internship_id: bigint({ mode: "number" })
+    .primaryKey()
+    .notNull()
+    .references(() => internship_model.id),
+  student_id: bigint({ mode: "number" })
+    .notNull()
+    .references(() => user_model.id),
+  applied_at: timestamp({ withTimezone: true }).defaultNow(),
+  status: text().default("applied"),
+});
+
+export const posted_internship_model = pgTable("posted_internships", {
+  internship_id: bigint({ mode: "number" })
+    .primaryKey()
+    .notNull()
+    .references(() => internship_model.id),
+  lawyer_id: bigint({ mode: "number" })
+    .notNull()
+    .references(() => user_model.id),
+  posted_at: timestamp({ withTimezone: true }).defaultNow(),
+  status: text().default("open"),
+});
+export const internship_model = pgTable("internships", {
+  id: bigint({ mode: "number" }).primaryKey(),
+  title: text().notNull(),
+  description: text().notNull(),
+  location: text().notNull(),
+  specialization: text().notNull(),
+  designation: text().notNull(),
+  duration: text().notNull(),
+  compensation_type: text(),
+  salary_amount: text(),
+  application_deadline: timestamp({ withTimezone: true }).notNull(),
+  requirements: text().array(),
+  benefits: text().array(),
+  posted_by: bigint({ mode: "number" })
+    .notNull()
+    .references(() => user_model.id),
+  posted_date: timestamp({ withTimezone: true }).defaultNow(),
+});

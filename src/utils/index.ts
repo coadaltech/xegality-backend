@@ -14,7 +14,9 @@ const verify_refresh_token = (token: string) => {
     return { valid: false };
   }
 };
-
+const create_unique_id = () => {
+  return Math.floor(Math.random() * 1e12);
+};
 const verify_access_token = (token: string) => {
   try {
     const payload = jwt.verify(token, process.env.ACCESS_KEY || "heymama");
@@ -29,7 +31,7 @@ const hash_password = async (password: string): Promise<string> => {
   const hashed_password = await bcrypt.hash(password, SALT);
   return hashed_password;
 };
-const generate_jwt = (id: string, role: string) => {
+const generate_jwt = (id: number, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
     expiresIn: "1h",
   });
@@ -37,7 +39,7 @@ const generate_jwt = (id: string, role: string) => {
 const verify_jwt = (token: string) => {
   return jwt.verify(token, process.env.ACCESS_KEY || "heymama");
 };
-const generate_refresh_jwt = (id: string, role: string) => {
+const generate_refresh_jwt = (id: number, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
     expiresIn: "7d",
   });
@@ -54,4 +56,5 @@ export {
   compare_password,
   verify_refresh_token,
   verify_access_token,
+  create_unique_id,
 };

@@ -22,12 +22,18 @@ const db_connect = () => {
       port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
       password: process.env.DB_PASSWORD,
       debug: function (_, query) {
-        console.log("[DATABASE] QUERY EXECUTED");
+        console.log(
+          `[DATABASE] QUERY EXECUTED : ${new Date().toLocaleString()}`
+        );
       },
     });
 
     const db = drizzle({ client: client });
-    console.log(`[DATABASE] http://localhost:${process.env.DB_PORT}`);
+    console.log(
+      `[DATABASE] http://localhost:${
+        process.env.DB_PORT
+      } ${new Date().toLocaleString()}`
+    );
     return db;
   } catch (error) {
     console.error(error);

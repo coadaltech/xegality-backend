@@ -1,17 +1,21 @@
 import { Elysia, t } from "elysia";
 import { authenticate_jwt } from "../middlewares";
 import {
+  ApplyInternshipSchema,
   PostInternshipSchema,
   SearchInternshipSchema,
 } from "../types/app.types";
 import {
   add_internship,
+  apply_internship,
+  delete_expired_internships,
   get_internships,
   search_internships,
-} from "../services/shared/internships";
+} from "../services/shared/internships.service";
+import { create_unique_id } from "../utils";
 
-const app_routes = new Elysia({ prefix: "/app" })
-  .state({ id: "", role: "" })
+const internship_routes = new Elysia({ prefix: "/app" })
+  .state({ id: 0, role: "" })
   .guard(
     {
       beforeHandle({ cookie, set, store, headers }) {
@@ -105,35 +109,23 @@ const app_routes = new Elysia({ prefix: "/app" })
                 message: "Restricted Endpoints",
               };
             }
-            const internship_id = `${Date.now()}${Math.random()
-              .toString(36)
-              .slice(2, 6)}`;
-            const data = body as unknown as {
-              id: typeof internship_id;
-              title: string;
-              firm_name: string;
-              location: string;
-              department: string;
-              position_type: string;
-              duration: string;
-              compensation_type: string;
-              salary_amount: string;
-              start_date: Date;
-              application_deadline: Date;
-              description: string;
-              requirements: string[];
-              benefits: string[];
-              is_remote: boolean;
-              accepts_international: boolean;
-              provides_housing: boolean;
-              employer_id: string;
-              employer_email: string;
-              posted_date: Date;
-              applicants_till_now?: number;
-              views?: number;
-              rating?: number;
+            const internship_id = create_unique_id();
+
+            const data = {
+              id: internship_id,
+              title: body.title,
+              description: body.description,
+              location: body.location,
+              specialization: body.specialization,
+              designation: body.designation,
+              duration: body.duration,
+              application_deadline: new Date(body.application_deadline),
+              posted_by: Number(store.id),
+              compensation_type: body.compensation_type,
+              salary_amount: body.salary_amount,
+              requirements: body.requirements,
+              benefits: body.benefits,
             };
-            data.id = internship_id;
             const post_internship_response = await add_internship(
               data,
               store.id
@@ -150,6 +142,50 @@ const app_routes = new Elysia({ prefix: "/app" })
             body: PostInternshipSchema,
           }
         )
+        .post(
+          "/apply-internship",
+          async ({ set, store, body }) => {
+            if (store.role === "consumer") {
+              set.status = 409;
+              return {
+                success: false,
+                code: 409,
+                message: "Restricted Endpoints",
+              };
+            }
+            const { internship_id } = body;
+            const apply_internship_response = await apply_internship(
+              internship_id,
+              store.id
+            );
+            set.status = apply_internship_response.code;
+            return {
+              success: apply_internship_response.success,
+              code: apply_internship_response.code,
+              message: apply_internship_response.message,
+            };
+          },
+          { body: ApplyInternshipSchema }
+        )
+        .get("/delete-expired-internships", async ({ set, store }) => {
+          if (store.role === "consumer") {
+            set.status = 409;
+            return {
+              success: false,
+              code: 409,
+              message: "Restricted Endpoints",
+            };
+          }
+          const internships_response = await delete_expired_internships();
+
+          set.status = internships_response.code;
+          return {
+            success: internships_response.success,
+            code: internships_response.code,
+            message: internships_response.message,
+            data: internships_response?.data,
+          };
+        })
   );
 
-export default app_routes;
+export default internship_routes;

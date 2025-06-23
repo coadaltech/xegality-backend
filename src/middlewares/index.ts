@@ -9,7 +9,7 @@ export const authenticate_jwt = (access_token: string) => {
       success: true,
       code: 200,
       message: "Valid Access Token",
-      data: decoded as { id: string; role: string },
+      data: decoded as { id: number; role: string },
     };
   } catch (err) {
     return {

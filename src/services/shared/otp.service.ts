@@ -1,6 +1,7 @@
 import db from "../../config/db";
 import { otp_model } from "../../models/shared/otp.model";
 import {
+  create_unique_id,
   generate_jwt,
   generate_refresh_jwt,
   hash_password,
@@ -8,6 +9,10 @@ import {
 import { eq } from "drizzle-orm";
 import { RoleType } from "../../types/auth.types";
 import { user_model } from "../../models/shared/user.model";
+import { lawyer_model } from "../../models/lawyer.model";
+import { consumer_model } from "../../models/consumer.model";
+import { student_model } from "../../models/student.model";
+import { find_user_by_id } from "./user.service";
 
 const create_user = async (
   name: string,
@@ -17,12 +22,16 @@ const create_user = async (
   email?: string
 ) => {
   try {
-    const user_id = `${Date.now()}${Math.random()
-      .toString(36)
-      .slice(2, 6)}`;
+    let user_id;
+    do {
+      user_id = create_unique_id();
+    } while ((await find_user_by_id(user_id)).success);
+
     const hashed_password = await hash_password(password);
+
     const access_token = generate_jwt(user_id, role);
     const refresh_token = generate_refresh_jwt(user_id, role);
+
     await db
       .insert(user_model)
       .values({
@@ -35,6 +44,19 @@ const create_user = async (
         refresh_token,
       })
       .returning();
+    
+      await db
+      .insert(
+        role == "consumer"
+          ? consumer_model
+          : role == "student"
+          ? student_model
+          : lawyer_model
+      )
+      .values({
+        id: user_id,
+      });
+
     return {
       success: true,
       code: 200,
@@ -47,7 +69,6 @@ const create_user = async (
         refresh_token,
         access_token,
         email,
-        hashed_password,
       },
     };
   } catch (error: any) {

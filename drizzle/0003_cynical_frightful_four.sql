@@ -1,1 +1,0 @@
-ALTER TABLE "internship_opportunities" DROP CONSTRAINT "internship_opportunities_employer_id_unique";

@@ -4,6 +4,7 @@ import { user_model } from "../../models/shared/user.model";
 import { RoleType } from "../../types/auth.types";
 import {
   compare_password,
+  create_unique_id,
   generate_jwt,
   generate_refresh_jwt,
   random_otp,
@@ -86,7 +87,7 @@ const handle_login = async (password: string, value: number | string) => {
     };
   }
 };
-const create_tokens = async (id: string, role: string) => {
+const create_tokens = async (id: number, role: string) => {
   try {
     const new_access_token = generate_jwt(id, role);
     const new_refresh_token = generate_refresh_jwt(id, role);
@@ -121,7 +122,7 @@ const verify_token_with_db = async (refresh_token: string) => {
     if (
       !data.payload ||
       typeof data.payload === "string" ||
-      typeof data.payload.id !== "string" ||
+      typeof data.payload.id !== "number" ||
       typeof data.payload.role !== "string"
     ) {
       return {
@@ -130,7 +131,7 @@ const verify_token_with_db = async (refresh_token: string) => {
         message: "Invalid payload in refresh token",
       };
     }
-    const res: { id: string; role: string } = {
+    const res: { id: number; role: string } = {
       id: data.payload.id,
       role: data.payload.role,
     };
@@ -249,9 +250,7 @@ const handle_google_callback = async ({ query, set }: any) => {
       };
     } else {
       // Signup
-      const user_id = `user_${Date.now()}${Math.random()
-        .toString(36)
-        .slice(2, 6)}`;
+      const user_id = create_unique_id();
       const refresh_token = generate_refresh_jwt(user_id, role);
       const access_token = generate_jwt(user_id, role);
       await db.insert(user_model).values({
@@ -317,7 +316,7 @@ const handle_login_by_token = async (payload: JwtPayload) => {
       message: "Logged in via refresh token",
       data: {
         id: updated_user.id,
-        name: updated_user.name,
+        role: updated_user.role,
         access_token,
         refresh_token,
       },
@@ -348,7 +347,9 @@ const otp_cycle = async (value: string | number) => {
     if (existing) {
       await db.update(otp_model).set({ otp }).where(eq(otp_model.phone, value));
     } else {
+      const otp_id = create_unique_id();
       await db.insert(otp_model).values({
+        id: otp_id,
         otp,
         phone: value,
       });
@@ -371,7 +372,9 @@ const otp_cycle = async (value: string | number) => {
     if (existing) {
       await db.update(otp_model).set({ otp }).where(eq(otp_model.email, value));
     } else {
+      const otp_id = create_unique_id();
       await db.insert(otp_model).values({
+        id: otp_id,
         otp,
         email: value,
       });
