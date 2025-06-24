@@ -13,7 +13,6 @@ import {
 import { get_tokens, get_user_info } from "./google.service";
 import { JwtPayload } from "jsonwebtoken";
 import { otp_model } from "../../models/shared/otp.model";
-import { find_user_by_email, find_user_by_value } from "./user.service";
 
 const handle_login = async (password: string, value: number | string) => {
   try {
@@ -70,6 +69,11 @@ const handle_login = async (password: string, value: number | string) => {
       code: 200,
       message: "Login successful",
       data: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        phone: user.phone,
+        email: user.email,
         refresh_token,
         access_token,
       },
@@ -87,7 +91,7 @@ const create_tokens = async (id: number, role: string) => {
   try {
     const new_access_token = generate_jwt(id, role);
     const new_refresh_token = generate_refresh_jwt(id, role);
-    await db.update(user_model).set({ refresh_token: new_refresh_token }).where(eq(user_model.id,id));
+    await db.update(user_model).set({ refresh_token: new_refresh_token });
     return {
       success: true,
       code: 200,
@@ -311,6 +315,8 @@ const handle_login_by_token = async (payload: JwtPayload) => {
       code: 200,
       message: "Logged in via refresh token",
       data: {
+        id: updated_user.id,
+        role: updated_user.role,
         access_token,
         refresh_token,
       },
@@ -324,104 +330,68 @@ const handle_login_by_token = async (payload: JwtPayload) => {
     };
   }
 };
-const handle_login_by_otp = async (value: string | number) => {
-  try {
-    const user_exists = await find_user_by_value(value);
-    if (!user_exists || !user_exists.data) {
-      return user_exists;
-    }
-    const access_token = generate_jwt(user_exists.data.id, user_exists.data.role);
-    const refresh_token = generate_refresh_jwt(user_exists.data.id, user_exists.data.role);
 
-    await db.update(user_model).set({ refresh_token }).where(eq(user_model.id, user_exists.data.id));
+const otp_cycle = async (value: string | number) => {
+  const otp = random_otp();
 
-    return {
-      success: true,
-      code: 200,
-      message: "Login successful",
-      data: {
-        refresh_token,
-        access_token,
-      },
-    };
-  } catch (error: any) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      code: 500,
-      message: "Internal server error during login",
-    };
-  }
-};
-
-export const generate_otp = async (value: string | number, is_signup: string) => {
-  const isPhone = typeof value === "number";
-  const field = isPhone ? otp_model.phone : otp_model.email;
-  const label = isPhone ? "Phone" : "Email";
-  const now = new Date().toLocaleString();
-
-  try {
-    // Check if user exists with the given phone or email
-    if (is_signup == "signup") {
-      const user_exists = await db
-        .select()
-        .from(user_model)
-        .where(eq(isPhone ? user_model.phone : user_model.email, value))
-        .limit(1);
-
-      if (user_exists.length) {
-        return {
-          success: false,
-          code: 404,
-          message: `User found with this ${label.toLowerCase()}: ${value}`,
-        };
-      }
-    }
-    const otp = random_otp();
+  if (typeof value === "number") {
+    // Handle phone login
     const existing = (
-      await db.select().from(otp_model).where(eq(field, value)).limit(1)
+      await db
+        .select()
+        .from(otp_model)
+        .where(eq(otp_model.phone, value))
+        .limit(1)
     )[0];
 
     if (existing) {
-      await db.update(otp_model).set({ otp }).where(eq(field, value));
-      console.log(
-        `[SERVER]    Updated OTP sent to ${label}: ${value} @ ${now}`
-      );
+      await db.update(otp_model).set({ otp }).where(eq(otp_model.phone, value));
     } else {
       const otp_id = create_unique_id();
-      const insertData: any = {
+      await db.insert(otp_model).values({
         id: otp_id,
         otp,
-      };
-      insertData[isPhone ? "phone" : "email"] = value;
-
-      await db.insert(otp_model).values(insertData);
-      console.log(`[SERVER]    New OTP sent to ${label}: ${value} @ ${now}`);
+        phone: value,
+      });
     }
-
     return {
       success: true,
       code: 200,
-      message: `OTP sent to ${label.toLowerCase()}: ${value}`,
+      message: `OTP sent to phone: ${value}`,
     };
-  } catch (error) {
-    console.error(
-      `[SERVER]    Failed to send OTP to ${label}: ${value} @ ${now}`
-    );
-    console.error(`[ERROR]`, error);
+  } else {
+    // Handle phone login
+    const existing = (
+      await db
+        .select()
+        .from(otp_model)
+        .where(eq(otp_model.email, value))
+        .limit(1)
+    )[0];
+
+    if (existing) {
+      await db.update(otp_model).set({ otp }).where(eq(otp_model.email, value));
+    } else {
+      const otp_id = create_unique_id();
+      await db.insert(otp_model).values({
+        id: otp_id,
+        otp,
+        email: value,
+      });
+    }
     return {
-      success: false,
-      code: 500,
-      message: `Failed to send OTP to ${label.toLowerCase()}: ${value}`,
-      error: error instanceof Error ? error.message : String(error),
+      success: true,
+      code: 200,
+      message: `OTP sent to email: ${value}`,
     };
   }
 };
+
 export {
   create_tokens,
   handle_login_by_token,
   handle_login,
+  otp_cycle,
   handle_google_callback,
   verify_token_with_db,
-  handle_login_by_otp,
 };
