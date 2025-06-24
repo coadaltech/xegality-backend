@@ -82,6 +82,7 @@ export const find_user_by_value = async (value: string | number) => {
     return { success: false, code: 500, message: "ERROR : find_user_by_email" };
   }
 };
+
 export const create_user = async (
   name: string,
   password: string,
@@ -125,8 +126,8 @@ export const create_user = async (
       role === "consumer"
         ? consumer_model
         : role === "student"
-        ? student_model
-        : lawyer_model;
+          ? student_model
+          : lawyer_model;
 
     await db.insert(role_model).values({
       id: user_id,
