@@ -1,0 +1,59 @@
+###
+POST http://localhost:4000/api/auth/generate-otp
+Content-Type: application/json
+
+{
+  "email": "consumer@gmail.com"
+}
+
+###
+POST http://localhost:4000/api/auth/generate-otp
+Content-Type: application/json
+
+{
+  "email": "lawyer@gmail.com"
+}
+
+###
+POST http://localhost:4000/api/auth/generate-otp
+Content-Type: application/json
+
+{
+  "email": "student@gmail.com"
+}
+
+###
+POST http://localhost:4000/api/auth/verify-signup-otp
+Content-Type: application/json
+
+{
+  "email": "consumer@gmail.com",
+  "otp": 290523,
+  "name": "consumer",
+  "role": "consumer",
+  "password": "password123"
+}
+
+###
+POST http://localhost:4000/api/auth/verify-user
+Content-Type: application/json
+
+{
+  "email": "lawyer@gmail.com",
+  "otp": 981086,
+  "name": "lawyer",
+  "role": "lawyer",
+  "password": "password123"
+}
+
+###
+POST http://localhost:4000/api/auth/verify-user
+Content-Type: application/json
+
+{
+  "email": "student@gmail.com",
+  "otp": 669156,
+  "name": "student",
+  "role": "student",
+  "password": "password123"
+}

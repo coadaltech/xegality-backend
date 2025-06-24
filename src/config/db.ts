@@ -21,7 +21,7 @@ const db_connect = () => {
       username: process.env.DB_USER,
       port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
       password: process.env.DB_PASSWORD,
-      debug: function (_, query) {
+      debug: function(_, query) {
         console.log(
           `[DATABASE] QUERY EXECUTED : ${new Date().toLocaleString()}`
         );
@@ -30,8 +30,7 @@ const db_connect = () => {
 
     const db = drizzle({ client: client });
     console.log(
-      `[DATABASE] http://localhost:${
-        process.env.DB_PORT
+      `[DATABASE] -> http://localhost:${process.env.DB_PORT
       } ${new Date().toLocaleString()}`
     );
     return db;
