@@ -1,0 +1,92 @@
+@name=John
+@age=30
+
+POST https://httpbin.org/post HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbnZlbnRvcnlVc2VySWQiOiI2ODRlODdlMDMyYThhNTUwZWY0NzUwODQiLCJpYXQiOjE3NTAyMzI1NzIsImV4cCI6MTc1MDQwNTM3Mn0.QYy_G61LpzI4dLNBY3ZkYsZjTkZiXFECXQOGTHDYozE
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+name={{name}}&
+age={{age}}
+
+###
+POST http://localhost:4000/api/auth/generate-otp
+Content-Type: application/json
+
+{
+  "phone": 12345678901
+}
+
+###
+POST http://localhost:4000/api/auth/generate-otp
+Content-Type: application/json
+
+{
+  "email": "student@gmail.com"
+}
+
+###
+POST http://localhost:4000/api/auth/verify-user
+Content-Type: application/json
+
+{
+  "email": "student@gmail.com",
+  "otp": 651056,
+  "name": "student",
+  "role": "student",
+  "password": "password123"
+}
+
+###
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "phone": 12345678901,
+  "password": "password123"
+}
+
+###
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "consumer@gmail.com",
+  "password": "password123"
+}
+
+###
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "lawyer@gmail.com",
+  "password": "password123"
+}
+
+###
+POST http://localhost:4000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "student@gmail.com",
+  "password": "password123"
+}
+
+
+### ------ WEB SOCKETS ------ ###
+
+WS ws://localhost:4001/chat?to=user_175018770338311cz&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MjM5OTUxMTNiNDMiLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTAzMzk2NjEsImV4cCI6MTc1MDM0MzI2MX0.Qnt5McrhRMtL6PMSorfjR6CnUS5dJ-ukMh5MqDrW58k
+
+{ "from" : "user_23323", "to" : "user_99999", "content" : "hi from consumer meant for lawyer" }
+
+###
+WS ws://localhost:4001/chat?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MjExNzUzNTlobjIiLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUwMzM5NDU4LCJleHAiOjE3NTAzNDMwNTh9.jpWxcuZ1ja-clPLR_eQItIeYUHX9J42pAk5v27nccdk
+
+{ "from" : "user_23323", "to" : "user_99999", "content" : "hi from lawyer" }
+
+###
+WS ws://localhost:4001/chat?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MTA3NTgzOGx0NW8iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDMzOTY4NSwiZXhwIjoxNzUwMzQzMjg1fQ.SsSgUKaqXW9FVp2drBuJAmqFbpYWaXR62qeePDpnkzw
+
+{ "from" : "user_23323", "to" : "user_99999", "content" : "hi from lawyer" }
+
