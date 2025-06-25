@@ -143,7 +143,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     if (!refresh_token) {
       console.log(
         `[SERVER]   No Refresh Token Found : ${new Date().toLocaleString()}`
-      );      
+      );
       return {
         success: true,
         code: 404,
@@ -154,13 +154,13 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       console.log(
         `[SERVER]   No Refresh Token Found : ${new Date().toLocaleString()}`
       );
-    
-    return {
-      success: true,
-      code: 404,
-      message: "No Refresh Token",
-    };
-  }
+
+      return {
+        success: true,
+        code: 404,
+        message: "No Refresh Token",
+      };
+    }
     const validation_response = await verify_token_with_db(
       String(refresh_token)
     );

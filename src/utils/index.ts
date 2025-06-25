@@ -33,7 +33,7 @@ const hash_password = async (password: string): Promise<string> => {
 };
 const generate_jwt = (id: number, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
-    expiresIn: "1h",
+    expiresIn: "1d",
   });
 };
 const verify_jwt = (token: string) => {

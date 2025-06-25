@@ -12,3 +12,11 @@ export const messages_model = pgTable('messages', {
   seen: boolean().default(false),
   created_at: timestamp().defaultNow(),
 });
+
+export const user_connections_model = pgTable('connections', {
+  id: serial().primaryKey(),
+  user1_id: bigint({ mode: "number" }).references(() => user_model.id, { onDelete: 'cascade' }),
+  user2_id: bigint({ mode: "number" }).references(() => user_model.id, { onDelete: 'cascade' }),
+  initiated_by: bigint({ mode: "number" }).references(() => user_model.id, { onDelete: 'cascade' }),
+  connected_at: timestamp().defaultNow(),
+});

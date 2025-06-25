@@ -4,5 +4,5 @@ import { user_model } from "./shared/user.model";
 export const student_model = pgTable("students", {
   id: bigint({ mode: "number" })
     .primaryKey()
-    .references(() => user_model.id),
+    .references(() => user_model.id, { onDelete: 'cascade' }),
 });
