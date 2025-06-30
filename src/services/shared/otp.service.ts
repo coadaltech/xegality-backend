@@ -1,102 +1,8 @@
 import db from "../../config/db";
 import { otp_model } from "../../models/shared/otp.model";
-import {
-  create_unique_id,
-  generate_jwt,
-  generate_refresh_jwt,
-  hash_password,
-} from "../../utils";
 import { eq } from "drizzle-orm";
-import { RoleType } from "../../types/auth.types";
-import { user_model } from "../../models/shared/user.model";
-import { lawyer_model } from "../../models/lawyer.model";
-import { consumer_model } from "../../models/consumer.model";
-import { student_model } from "../../models/student.model";
-import { find_user_by_id } from "./user.service";
 
-const create_user = async (
-  name: string,
-  password: string,
-  role: RoleType,
-  phone?: number,
-  email?: string
-) => {
-  try {
-    let user_id;
-    do {
-      user_id = create_unique_id();
-    } while ((await find_user_by_id(user_id)).success);
 
-    const hashed_password = await hash_password(password);
-
-    const access_token = generate_jwt(user_id, role);
-    const refresh_token = generate_refresh_jwt(user_id, role);
-
-    await db
-      .insert(user_model)
-      .values({
-        id: user_id,
-        name,
-        role,
-        phone,
-        email,
-        hashed_password,
-        refresh_token,
-      })
-      .returning();
-    
-      await db
-      .insert(
-        role == "consumer"
-          ? consumer_model
-          : role == "student"
-          ? student_model
-          : lawyer_model
-      )
-      .values({
-        id: user_id,
-      });
-
-    return {
-      success: true,
-      code: 200,
-      message: "User Created Successfully",
-      data: {
-        user_id,
-        name,
-        role,
-        phone,
-        refresh_token,
-        access_token,
-        email,
-      },
-    };
-  } catch (error: any) {
-    if (error?.cause?.code === "23505") {
-      const detail = error?.cause?.detail as string;
-
-      if (detail.includes("phone")) {
-        return {
-          success: false,
-          code: 409,
-          message: "Phone number already exists",
-        };
-      } else if (detail.includes("email")) {
-        return {
-          success: false,
-          code: 409,
-          message: "Email already exists",
-        };
-      }
-
-      return {
-        success: false,
-        code: 500,
-        message: "Internal Server Error",
-      };
-    }
-  }
-};
 const verify_otp = async (otp: number, value: string | number) => {
   try {
     let db_response;
@@ -140,7 +46,6 @@ const verify_otp = async (otp: number, value: string | number) => {
     return { success: false, code: 500, message: "ERROR : verify_otp" };
   }
 };
-
 const find_otp_by_phone = async (phone: number) => {
   try {
     const exisiting_otp = (
@@ -185,4 +90,4 @@ const find_otp_by_email = async (email: string) => {
     return { success: false, code: 500, message: "ERROR : find_otp_by_otp" };
   }
 };
-export { verify_otp, find_otp_by_phone, find_otp_by_email, create_user };
+export { verify_otp, find_otp_by_phone, find_otp_by_email};

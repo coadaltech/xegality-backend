@@ -1,24 +1,99 @@
-import { InferInsertModel, ilike, or, lt, sql, eq } from "drizzle-orm";
+import {
+  InferInsertModel,
+  ilike,
+  or,
+  lt,
+  sql,
+  eq,
+  ne,
+  and,
+  isNull,
+} from "drizzle-orm";
 import db from "../../config/db";
 import {
   applied_internship_model,
   internship_model,
-  posted_internship_model,
 } from "../../models/shared/internship.model";
-import { user_model } from "../../models/shared/user.model";
-import { create_unique_id } from "../../utils";
-
 type NewInternship = InferInsertModel<typeof internship_model>;
 
-const get_internships = async () => {
+export const get_internships = async (id: number, role: string) => {
   try {
-    const internship_opportunities = await db.select().from(internship_model);
+    let internship_opportunities;
+    if (role === "lawyer" || role === "paralegal") {
+      internship_opportunities = await db
+        .select()
+        .from(internship_model)
+        .where(eq(internship_model.posted_by, id));
+      if (!internship_opportunities || internship_opportunities.length === 0) {
+        return {
+          success: true,
+          code: 200,
+          message: `No Posted Internships Found`,
+          data: [],
+        };
+      }
+      return {
+        success: true,
+        code: 200,
+        message: `Total ${internship_opportunities.length} Internships Posted`,
+        data: internship_opportunities,
+      };
+
+    } else {
+      internship_opportunities = await db
+        .select()
+        .from(internship_model)
+        .leftJoin(
+          applied_internship_model,
+          eq(internship_model.id, applied_internship_model.internship_id)
+        )
+        .where(
+          or(
+            isNull(applied_internship_model.student_id),
+            ne(applied_internship_model.student_id, id)
+          )
+        );
+      if (!internship_opportunities || internship_opportunities.length === 0) {
+        return {
+          success: true,
+          code: 200,
+          message: `No Applied Internships Found`,
+          data: [],
+        };
+      }
+      return {
+        success: true,
+        code: 200,
+        message: `Total ${internship_opportunities.length} Internships Available`,
+        data: internship_opportunities,
+      };
+    }
+  } catch (error) {
+    console.error("fetch_internships error:", error);
+    return {
+      success: false,
+      code: 500,
+      message: "Failed to fetch internship opportunities",
+      error: String(error),
+    };
+  }
+};
+export const get_applied_internships = async (id: number) => {
+  try {
+    const internship_opportunities = await db
+      .select()
+      .from(internship_model)
+      .leftJoin(
+        applied_internship_model,
+        eq(internship_model.id, applied_internship_model.internship_id)
+      )
+      .where(eq(applied_internship_model.student_id, id));
 
     if (!internship_opportunities || internship_opportunities.length === 0) {
       return {
         success: true,
         code: 200,
-        message: "No internship opportunities found",
+        message: `Not Applied to Any Internships`,
         data: [],
       };
     }
@@ -26,7 +101,7 @@ const get_internships = async () => {
     return {
       success: true,
       code: 200,
-      message: "Internship opportunities fetched successfully",
+      message: `Total ${internship_opportunities.length} Internships Found`,
       data: internship_opportunities,
     };
   } catch (error) {
@@ -39,58 +114,13 @@ const get_internships = async () => {
     };
   }
 };
-
-const add_internship = async (body: NewInternship, employer_id: number) => {
+export const create_internship = async (body: NewInternship) => {
   try {
-    if (!employer_id) {
-      return {
-        success: false,
-        code: 400,
-        message: "Missing employer_id",
-      };
-    }
-
-    const {
-      id,
-      title,
-      location,
-      duration,
-      compensation_type,
-      salary_amount,
-      application_deadline,
-      description,
-      requirements,
-      benefits,
-      posted_by,
-      posted_date = new Date(),
-      specialization,
-      designation,
-    } = body;
 
     const result = await db
       .insert(internship_model)
-      .values({
-        id,
-        title,
-        location,
-        duration,
-        compensation_type,
-        salary_amount,
-        application_deadline,
-        description,
-        requirements,
-        benefits,
-        posted_by,
-        posted_date,
-        specialization,
-        designation,
-      })
+      .values(body)
       .returning();
-
-    // await db.insert(posted_internship_model).values({
-    //   internship_id: id,
-    //   lawyer_id: posted_by,
-    // });
 
     return {
       success: true,
@@ -106,7 +136,7 @@ const add_internship = async (body: NewInternship, employer_id: number) => {
       return {
         success: false,
         code: 409,
-        message: "Duplicate entry: Employer ID or other unique field exists",
+        message: "Duplicate entry: Internship ID or other unique field exists",
       };
     }
 
@@ -118,7 +148,7 @@ const add_internship = async (body: NewInternship, employer_id: number) => {
     };
   }
 };
-const apply_internship = async (internship_id: number, student_id: number) => {
+export const apply_internship = async (internship_id: number, student_id: number) => {
   try {
     const internship = (
       await db
@@ -155,7 +185,7 @@ const apply_internship = async (internship_id: number, student_id: number) => {
     };
   }
 };
-const search_internships = async (query: string) => {
+export const search_internships = async (query: string) => {
   try {
     const trimmedQuery = query.trim();
 
@@ -197,8 +227,7 @@ const search_internships = async (query: string) => {
     };
   }
 };
-
-const delete_expired_internships = async () => {
+export const delete_expired_internships = async () => {
   try {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
@@ -225,12 +254,4 @@ const delete_expired_internships = async () => {
       error: String(error),
     };
   }
-};
-
-export {
-  get_internships,
-  add_internship,
-  search_internships,
-  delete_expired_internships,
-  apply_internship,
 };

@@ -1,28 +1,12 @@
-import { bigint, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, PgEnum, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { user_model } from "./user.model";
+import { TAGENUM } from "../../types/app.types";
 
 export const applied_internship_model = pgTable("applied_internships", {
-  internship_id: bigint({ mode: "number" })
-    .primaryKey()
-    .notNull()
-    .references(() => internship_model.id),
-  student_id: bigint({ mode: "number" })
-    .notNull()
-    .references(() => user_model.id),
+  internship_id: bigint({ mode: "number" }).primaryKey().notNull().references(() => internship_model.id),
+  student_id: bigint({ mode: "number" }).notNull().references(() => user_model.id),
   applied_at: timestamp({ withTimezone: true }).defaultNow(),
   status: text().default("applied"),
-});
-
-export const posted_internship_model = pgTable("posted_internships", {
-  internship_id: bigint({ mode: "number" })
-    .primaryKey()
-    .notNull()
-    .references(() => internship_model.id),
-  lawyer_id: bigint({ mode: "number" })
-    .notNull()
-    .references(() => user_model.id),
-  posted_at: timestamp({ withTimezone: true }).defaultNow(),
-  status: text().default("open"),
 });
 export const internship_model = pgTable("internships", {
   id: bigint({ mode: "number" }).primaryKey(),
@@ -37,8 +21,7 @@ export const internship_model = pgTable("internships", {
   application_deadline: timestamp({ withTimezone: true }).notNull(),
   requirements: text().array(),
   benefits: text().array(),
-  posted_by: bigint({ mode: "number" })
-    .notNull()
-    .references(() => user_model.id),
+  posted_by: bigint({ mode: "number" }).notNull().references(() => user_model.id),
   posted_date: timestamp({ withTimezone: true }).defaultNow(),
+  // tags: pgEnum("tags", TAGENUM)().array()
 });

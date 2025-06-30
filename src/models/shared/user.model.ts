@@ -7,7 +7,7 @@ import {
   bigint,
 } from "drizzle-orm/pg-core";
 
-const UserTypeEnum = pgEnum("role", ["consumer", "lawyer", "student"]);
+const UserTypeEnum = pgEnum("role", ["consumer", "lawyer", "student","paralegal"]);
 
 const user_model = pgTable("users", {
   id: bigint({ mode: "number" }).primaryKey(),

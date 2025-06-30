@@ -1,22 +1,10 @@
 import { Elysia } from "elysia";
-import {
-  create_tokens,
-  handle_google_callback,
-  handle_login,
-  handle_login_by_token,
-  otp_cycle,
-  verify_token_with_db,
-} from "../services/shared/auth.service";
-import { create_user, verify_otp } from "../services/shared/otp.service";
-import {
-  LoginSchema,
-  VerifyUserSchema,
-  GenerateOtpSchema,
-  GoogleCallbackSchema,
-  VerifyLoginOtpSchema,
-} from "../types/auth.types";
-import { get_consent_url } from "../services/shared/google.service";
-import { verify_access_token, verify_refresh_token } from "../utils";
+import { otp_cycle, verify_token_with_db, create_tokens, handle_login_by_token, handle_login, handle_google_callback } from "../../services/shared/auth.service";
+import { get_consent_url } from "../../services/shared/google.service";
+import { verify_otp } from "../../services/shared/otp.service";
+import { create_user } from "../../services/shared/user.service";
+import { GenerateOtpSchema, VerifyUserSchema, LoginSchema, VerifyLoginOtpSchema, GoogleCallbackSchema } from "../../types/auth.types";
+import { verify_access_token } from "../../utils";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
 
@@ -121,7 +109,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           value: creating_user_response.data.access_token,
           httpOnly: true,
           secure: true,
-          maxAge: 60 * 60,
+          maxAge: 60 * 60 * 24,
           path: "/",
         });
         console.log(
@@ -138,7 +126,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
   )
 
   // REFRESH TOKENS
-  .post("/refresh-tokens", async ({ cookie, set }) => {
+  .get("/refresh-tokens", async ({ cookie, set }) => {
     const refresh_token = cookie.refresh_token;
     if (!refresh_token) {
       console.log(
@@ -150,17 +138,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         message: "No Refresh Token",
       };
     }
-    if (refresh_token) {
-      console.log(
-        `[SERVER]   No Refresh Token Found : ${new Date().toLocaleString()}`
-      );
 
-      return {
-        success: true,
-        code: 404,
-        message: "No Refresh Token",
-      };
-    }
     const validation_response = await verify_token_with_db(
       String(refresh_token)
     );
@@ -199,7 +177,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         value: data.data?.new_refresh_token,
         httpOnly: true,
         secure: true,
-        maxAge: 60 * 60,
+        maxAge: 60 * 60 * 24,
         path: "/",
       });
       console.log(
@@ -284,7 +262,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           value: response.data.access_token,
           httpOnly: true,
           secure: true,
-          maxAge: 60 * 60,
+          maxAge: 60 * 60 * 24,
           path: "/",
         });
         console.log(
@@ -343,7 +321,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       console.log(`[SERVER]   No Role : ${new Date().toLocaleString()}`);
       return { succes: false, code: 404, message: "Missing Role In Query" };
     }
-    if (role !== "consumer" && role !== "lawyer" && role !== "student") {
+    if (role !== "consumer" && role !== "lawyer" && role !== "student" && role === "paralegal") {
       console.log(`[SERVER]   Invalid Role : ${new Date().toLocaleString()}`);
       return { succes: false, code: 404, message: "Invalid Role In Query" };
     }
@@ -375,7 +353,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           value: response.data.access_token,
           httpOnly: true,
           secure: true,
-          maxAge: 60 * 60,
+          maxAge: 60 * 60 * 24,
           path: "/",
         });
         console.log(

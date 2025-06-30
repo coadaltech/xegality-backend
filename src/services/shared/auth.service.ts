@@ -330,7 +330,6 @@ const handle_login_by_token = async (payload: JwtPayload) => {
     };
   }
 };
-
 const otp_cycle = async (value: string | number) => {
   const otp = random_otp();
 

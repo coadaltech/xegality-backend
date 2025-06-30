@@ -6,6 +6,7 @@ import { create_unique_id, generate_jwt, generate_refresh_jwt, hash_password } f
 import { consumer_model } from "../../models/consumer.model";
 import { student_model } from "../../models/student.model";
 import { lawyer_model } from "../../models/lawyer.model";
+import { paralegal_model } from "../../models/paralegal.model";
 
 export const find_user_by_id = async (id: number) => {
   try {
@@ -77,7 +78,6 @@ export const find_user_by_value = async (value: string | number) => {
     return { success: false, code: 500, message: "ERROR : find_user_by_email" };
   }
 };
-
 export const create_user = async (
   name: string,
   password: string,
@@ -85,97 +85,67 @@ export const create_user = async (
   phone?: number,
   email?: string
 ) => {
-  const now = new Date().toLocaleString();
-
   try {
-    // Generate unique user ID
     let user_id;
     do {
       user_id = create_unique_id();
     } while ((await find_user_by_id(user_id)).success);
 
-    // Hash password
     const hashed_password = await hash_password(password);
 
-    // Generate tokens
     const access_token = generate_jwt(user_id, role);
     const refresh_token = generate_refresh_jwt(user_id, role);
 
-    // Insert user
-    await db.insert(user_model).values({
-      id: user_id,
-      name,
-      role,
-      phone,
-      email,
-      hashed_password,
-      refresh_token,
-    });
-
-    console.log(
-      `[SERVER]    User inserted into user_model: ${user_id} @ ${now}`
-    );
-
-    // Insert role-specific profile
-    const role_model =
-      role === "consumer"
-        ? consumer_model
-        : role === "student"
-        ? student_model
-        : lawyer_model;
-
-    await db.insert(role_model).values({
-      id: user_id,
-    });
-
-    console.log(
-      `[SERVER]    Role model inserted for ${role}: ${user_id} @ ${now}`
-    );
+    await db
+      .insert(user_model)
+      .values({
+        id: user_id,
+        name,
+        role,
+        phone,
+        email,
+        hashed_password,
+        refresh_token,
+      })
+      .returning();
 
     return {
       success: true,
       code: 200,
       message: "User Created Successfully",
       data: {
+        user_id,
+        name,
+        role,
+        phone,
         refresh_token,
         access_token,
+        email,
       },
     };
   } catch (error: any) {
-    const detail = error?.cause?.detail;
-    const code = error?.cause?.code;
+    if (error?.cause?.code === "23505") {
+      const detail = error?.cause?.detail as string;
 
-    if (code === "23505") {
-      if (detail?.includes("phone")) {
-        console.warn(
-          `[SERVER]    Duplicate phone found during signup @ ${now}`
-        );
+      if (detail.includes("phone")) {
         return {
           success: false,
           code: 409,
           message: "Phone number already exists",
         };
-      }
-      if (detail?.includes("email")) {
-        console.warn(
-          `[SERVER]    Duplicate email found during signup @ ${now}`
-        );
+      } else if (detail.includes("email")) {
         return {
           success: false,
           code: 409,
           message: "Email already exists",
         };
       }
+
+      return {
+        success: false,
+        code: 500,
+        message: "Internal Server Error",
+      };
     }
-
-    console.error(`[SERVER]    Error creating user @ ${now}`);
-    console.error(`[ERROR]`, error);
-
-    return {
-      success: false,
-      code: 500,
-      message: "Internal Server Error",
-      error: error instanceof Error ? error.message : String(error),
-    };
   }
 };

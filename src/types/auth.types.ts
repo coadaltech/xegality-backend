@@ -14,6 +14,7 @@ const VerifyUserSchema = t.Object({
     consumer: "consumer",
     lawyer: "lawyer",
     student: "student",
+    paralegal: "paralegal",
   }),
   email: t.Optional(t.String()),
   otp: t.Number(),
@@ -26,6 +27,7 @@ const UserSchema = t.Object({
     consumer: "consumer",
     lawyer: "lawyer",
     student: "student",
+    paralegal: "paralegal",
   }),
   email: t.Optional(t.String()),
 });
@@ -46,7 +48,7 @@ type JWTUser = {
   id: string;
   role: string;
 };
-type RoleType = "consumer" | "lawyer" | "student";
+type RoleType = "consumer" | "lawyer" | "student" | "paralegal";
 type OtpType = (typeof VerifyUserSchema)["static"];
 type SignUpType = (typeof UserSchema)["static"];
 

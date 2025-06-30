@@ -1,41 +1,60 @@
 import { Elysia, t } from "elysia";
-import { application_middleware, authenticate_jwt } from "../middlewares";
+import { application_middleware, authenticate_jwt } from "../../middlewares";
 import {
   ApplyInternshipSchema,
   PostInternshipSchema,
   SearchInternshipSchema,
-} from "../types/app.types";
+} from "../../types/app.types";
 import {
-  add_internship,
   apply_internship,
+  create_internship,
   delete_expired_internships,
+  get_applied_internships,
   get_internships,
   search_internships,
-} from "../services/shared/internships.service";
-import { create_unique_id } from "../utils";
+} from "../../services/shared/internship.service";
+import { create_unique_id } from "../../utils";
 
-const internship_routes = new Elysia({ prefix: "/app" })
+const internship_routes = new Elysia({ prefix: "/internship" })
   .state({ id: 0, role: "" })
-  .guard(
-    {
-      beforeHandle({ cookie, set, store, headers }) {
-        const state = application_middleware({ cookie, headers });
+  .guard({
+    beforeHandle({ cookie, set, store, headers }) {
+      const state = application_middleware({ cookie, headers });
 
-        if (!state.data) {
-          set.status = state.code;
-          return {
-            success: state.success,
-            code: state.code,
-            message: state.message,
-          };
-        }
-
-        store.id = state.data.id;
-        store.role = state.data.role;
+      if (!state.data) {
+        set.status = state.code;
+        return {
+          success: state.success,
+          code: state.code,
+          message: state.message,
+        };
       }
-    })
-  .get("/get-internships", async ({ set, store }) => {
-    if (store.role === "consumer") {
+      if (state.data.role === "consumer") {
+        set.status = 409;
+        return {
+          success: false,
+          code: 409,
+          message: "Restricted Endpoints",
+        };
+      }
+
+      store.id = state.data.id;
+      store.role = state.data.role;
+    },
+  })
+  .get("/all", async ({ set, store }) => {
+    const internships_response = await get_internships(store.id, store.role);
+
+    set.status = internships_response.code;
+    return {
+      success: internships_response.success,
+      code: internships_response.code,
+      message: internships_response.message,
+      data: internships_response?.data,
+    };
+  })
+  .get("/applied", async ({ set, store }) => {
+    if (store.role === "lawyer" || store.role === "paralegal") {
       set.status = 409;
       return {
         success: false,
@@ -43,7 +62,7 @@ const internship_routes = new Elysia({ prefix: "/app" })
         message: "Restricted Endpoints",
       };
     }
-    const internships_response = await get_internships();
+    const internships_response = await get_applied_internships(store.id);
 
     set.status = internships_response.code;
     return {
@@ -54,9 +73,9 @@ const internship_routes = new Elysia({ prefix: "/app" })
     };
   })
   .post(
-    "/search-internships",
+    "/search",
     async ({ set, store, body }) => {
-      if (store.role === "consumer") {
+      if (store.role === "lawyer" || store.role === "paralegal") {
         set.status = 409;
         return {
           success: false,
@@ -80,9 +99,9 @@ const internship_routes = new Elysia({ prefix: "/app" })
     }
   )
   .post(
-    "/post-internship",
+    "/add",
     async ({ set, store, body }) => {
-      if (store.role === "consumer" || store.role === "student") {
+      if (store.role === "student") {
         set.status = 409;
         return {
           success: false,
@@ -107,10 +126,7 @@ const internship_routes = new Elysia({ prefix: "/app" })
         requirements: body.requirements,
         benefits: body.benefits,
       };
-      const post_internship_response = await add_internship(
-        data,
-        store.id
-      );
+      const post_internship_response = await create_internship(data);
       set.status = post_internship_response.code;
       return {
         success: post_internship_response.success,
@@ -124,9 +140,9 @@ const internship_routes = new Elysia({ prefix: "/app" })
     }
   )
   .post(
-    "/apply-internship",
+    "/apply",
     async ({ set, store, body }) => {
-      if (store.role === "consumer") {
+      if (store.role === "lawyer" || store.role === "paralegal") {
         set.status = 409;
         return {
           success: false,
@@ -148,8 +164,8 @@ const internship_routes = new Elysia({ prefix: "/app" })
     },
     { body: ApplyInternshipSchema }
   )
-  .get("/delete-expired-internships", async ({ set, store }) => {
-    if (store.role === "consumer") {
+  .get("/expired", async ({ set, store }) => {
+    if (store.role === "student") {
       set.status = 409;
       return {
         success: false,
@@ -166,6 +182,6 @@ const internship_routes = new Elysia({ prefix: "/app" })
       message: internships_response.message,
       data: internships_response?.data,
     };
-  })
+  });
 
 export default internship_routes;
