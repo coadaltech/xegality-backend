@@ -3,8 +3,9 @@ import "dotenv/config";
 import bcrypt from "bcrypt";
 
 const random_otp = () => {
-  return Math.floor(100000 + Math.random() * 900000);
+  return Math.floor(1000 + Math.random() * 9000);
 };
+
 const verify_refresh_token = (token: string) => {
   try {
     const payload = jwt.verify(token, process.env.ACCESS_KEY || "heymama");
@@ -14,9 +15,11 @@ const verify_refresh_token = (token: string) => {
     return { valid: false };
   }
 };
+
 const create_unique_id = () => {
   return Math.floor(Math.random() * 1e12);
 };
+
 const verify_access_token = (token: string) => {
   try {
     const payload = jwt.verify(token, process.env.ACCESS_KEY || "heymama");
@@ -26,27 +29,60 @@ const verify_access_token = (token: string) => {
     return { valid: false };
   }
 };
+
 const hash_password = async (password: string): Promise<string> => {
   const SALT = 10;
   const hashed_password = await bcrypt.hash(password, SALT);
   return hashed_password;
 };
+
 const generate_jwt = (id: number, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
     expiresIn: "1d",
   });
 };
+
 const verify_jwt = (token: string) => {
   return jwt.verify(token, process.env.ACCESS_KEY || "heymama");
 };
+
 const generate_refresh_jwt = (id: number, role: string) => {
   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
     expiresIn: "7d",
   });
 };
+
 const compare_password = async (password: string, hashed_password: string) => {
   return await bcrypt.compare(password, hashed_password);
 };
+
+const generate_case_id = (case_type: string) => {
+  const firstTwoChars = case_type.slice(0, 2).toUpperCase();
+  const currentYear = new Date().getFullYear();
+  const randomNumber = Math.floor(Math.random() * 9000) + 1000;
+  // Format the case ID as "XX-YYYY-XXXX"
+  const caseId = `${firstTwoChars}-${currentYear}-${randomNumber.toString().padStart(4, '0')}`;
+
+  return caseId;
+}
+
+const format_time_spent = (milliseconds: number) => {
+  const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+  return `${days} days ${hours} hours`;
+}
+
+const generate_application_id = () => {
+  const firstTwoChars = "CA"
+  const currentYear = new Date().getFullYear();
+  const randomNumber = Math.floor(Math.random() * 9000) + 1000;
+  // Format the case ID as "XX-YYYY-XXXX"
+  const caseId = `${firstTwoChars}-${currentYear}-${randomNumber.toString().padStart(4, '0')}`;
+
+  return caseId;
+}
+
 export {
   random_otp,
   hash_password,
@@ -57,4 +93,7 @@ export {
   verify_refresh_token,
   verify_access_token,
   create_unique_id,
+  format_time_spent,
+  generate_case_id,
+  generate_application_id
 };

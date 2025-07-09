@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
-import { RoleType } from "../../types/auth.types";
+import { RoleType } from "../../types/user.types";
 import {
   compare_password,
   create_unique_id,
@@ -179,7 +179,7 @@ const handle_google_callback = async ({ query, set }: any) => {
     }
 
     const state = query.state;
-    let role: string | undefined;
+    let role: string;
     try {
       role = JSON.parse(state)?.role;
     } catch {
@@ -253,13 +253,13 @@ const handle_google_callback = async ({ query, set }: any) => {
       const user_id = create_unique_id();
       const refresh_token = generate_refresh_jwt(user_id, role);
       const access_token = generate_jwt(user_id, role);
+
       await db.insert(user_model).values({
         id: user_id,
         name: data.name,
         role: role as RoleType,
         email: data.email,
         refresh_token: refresh_token,
-        profile_pic: data.profile_pic,
       });
       return {
         success: true,

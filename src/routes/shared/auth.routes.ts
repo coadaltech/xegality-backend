@@ -7,7 +7,6 @@ import { GenerateOtpSchema, VerifyUserSchema, LoginSchema, VerifyLoginOtpSchema,
 import { verify_access_token } from "../../utils";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
-
   // SIGNUP
   .post(
     "/generate-otp",
@@ -45,6 +44,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     },
     { body: GenerateOtpSchema }
   )
+
   .post(
     "/verify-signup-otp",
     async ({ body, set, cookie }) => {
@@ -52,7 +52,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       if (!phone && !email) {
         set.status = 400;
         console.log(
-          `[SERVER]   Phone or Email Missing : ${new Date().toLocaleString()}`
+          `[SERVER]  Phone or Email Missing : ${new Date().toLocaleString()}`
         );
         return {
           success: false,

@@ -1,5 +1,13 @@
 
 ###
+GET http://localhost:4000/api/consumer/dashboard/fetch-accessible-lawyers
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjU5MjQ2NzkwNjAzLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTA5MjAxMzQsImV4cCI6MTc1MTAwNjUzNH0.7VRat0d8LWBFDK1xXGcDc61_86kGAj_k7MUG9WF1wUo
 
-GET http://localhost:4000/api/dashboard/get-connected-lawyers
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTk1OTQ3OTc0OTY1LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUwODQ1MTQ2LCJleHAiOjE3NTA5MzE1NDZ9.o9zmAsQvTA8hM8V6DIxB-HheHI04OlMCHL59mAcDGF8
+###
+POST http://localhost:4000/api/consumer/connect-lawyer
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjU5MjQ2NzkwNjAzLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTA5MjAxMzQsImV4cCI6MTc1MTAwNjUzNH0.7VRat0d8LWBFDK1xXGcDc61_86kGAj_k7MUG9WF1wUo
+
+{
+  "lawyer_id": 559209946558
+}

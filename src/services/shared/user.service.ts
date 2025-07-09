@@ -1,12 +1,8 @@
 import { eq } from "drizzle-orm";
 import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
-import { RoleType } from "../../types/auth.types";
+import { RoleType } from "../../types/user.types";
 import { create_unique_id, generate_jwt, generate_refresh_jwt, hash_password } from "../../utils";
-import { consumer_model } from "../../models/consumer.model";
-import { student_model } from "../../models/student.model";
-import { lawyer_model } from "../../models/lawyer.model";
-import { paralegal_model } from "../../models/paralegal.model";
 
 export const find_user_by_id = async (id: number) => {
   try {
@@ -26,6 +22,7 @@ export const find_user_by_id = async (id: number) => {
     return { success: false, code: 500, message: "ERROR : find_user_by_id" };
   }
 };
+
 export const find_user_by_email = async (email: string) => {
   try {
     const existing_user = (
@@ -48,6 +45,7 @@ export const find_user_by_email = async (email: string) => {
     return { success: false, code: 500, message: "ERROR : find_user_by_email" };
   }
 };
+
 export const find_user_by_value = async (value: string | number) => {
   try {
     let user_exists;
@@ -78,6 +76,7 @@ export const find_user_by_value = async (value: string | number) => {
     return { success: false, code: 500, message: "ERROR : find_user_by_email" };
   }
 };
+
 export const create_user = async (
   name: string,
   password: string,
@@ -87,9 +86,7 @@ export const create_user = async (
 ) => {
   try {
     let user_id;
-    do {
-      user_id = create_unique_id();
-    } while ((await find_user_by_id(user_id)).success);
+    do { user_id = create_unique_id() } while ((await find_user_by_id(user_id)).success);
 
     const hashed_password = await hash_password(password);
 
@@ -122,8 +119,10 @@ export const create_user = async (
         access_token,
         email,
       },
-    };
-  } catch (error: any) {
+    }
+
+  }
+  catch (error: any) {
     if (error?.cause?.code === "23505") {
       const detail = error?.cause?.detail as string;
 
@@ -140,12 +139,12 @@ export const create_user = async (
           message: "Email already exists",
         };
       }
+    };
 
-      return {
-        success: false,
-        code: 500,
-        message: "Internal Server Error",
-      };
+    return {
+      success: false,
+      code: 500,
+      message: "Internal Server Error",
     }
   }
 };

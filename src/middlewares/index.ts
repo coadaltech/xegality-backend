@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import { ElysiaMiddlewareType } from "../types/elysia";
+import { ElysiaMiddlewareType } from "../types/elysia.types";
+import { RoleType } from "../types/user.types";
 
 const secretKey = process.env.ACCESS_KEY || "heymama";
 
@@ -10,7 +11,7 @@ export const authenticate_jwt = (access_token: string) => {
       success: true,
       code: 200,
       message: "Valid Access Token",
-      data: decoded as { id: number; role: string },
+      data: decoded as { id: number; role: RoleType },
     };
   } catch (err) {
     return {
@@ -21,7 +22,7 @@ export const authenticate_jwt = (access_token: string) => {
   }
 };
 
-export const application_middleware = ({ cookie, headers }: ElysiaMiddlewareType) => {
+export const app_middleware = ({ cookie, headers, allowed }: ElysiaMiddlewareType) => {
   let access_token = String(cookie.access_token) || String(headers["authorization"]?.replace("Bearer ", "") ?? "");
 
   if (!access_token) {
@@ -39,6 +40,14 @@ export const application_middleware = ({ cookie, headers }: ElysiaMiddlewareType
       success: middleware_response.success,
       code: middleware_response.code,
       message: middleware_response.message,
+    };
+  }
+
+  if (allowed && !allowed.includes(middleware_response.data.role)) {
+    return {
+      success: false,
+      code: 403,
+      message: "Restricted Endpoint",
     };
   }
 

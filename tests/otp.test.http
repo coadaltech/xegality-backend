@@ -1,5 +1,5 @@
 ###
-POST http://localhost:4000/api/auth/generate-otp
+POST http://localhost:4000/api/auth/generate-otp?mode=signup
 Content-Type: application/json
 
 {
@@ -11,7 +11,7 @@ POST http://localhost:4000/api/auth/generate-otp
 Content-Type: application/json
 
 {
-  "email": "lawyer@gmail.com"
+  "email": "lawyer9@gmail.com"
 }
 
 ###
@@ -27,8 +27,8 @@ POST http://localhost:4000/api/auth/verify-signup-otp
 Content-Type: application/json
 
 {
-  "email": "consumer@gmail.com",
-  "otp": 410384,
+  "email": "consumer12@gmail.com",
+  "otp": 1234,
   "name": "consumer",
   "role": "consumer",
   "password": "password123"
@@ -39,9 +39,9 @@ POST http://localhost:4000/api/auth/verify-signup-otp
 Content-Type: application/json
 
 {
-  "email": "lawyer@gmail.com",
-  "otp": 458615,
-  "name": "lawyer",
+  "email": "lawyer97@gmail.com",
+  "otp": 1234,
+  "name": "lawyer8",
   "role": "lawyer",
   "password": "password123"
 }
@@ -51,8 +51,8 @@ POST http://localhost:4000/api/auth/verify-signup-otp
 Content-Type: application/json
 
 {
-  "email": "student@gmail.com",
-  "otp": 669156,
+  "email": "student19@gmail.com",
+  "otp": 1234,
   "name": "student",
   "role": "student",
   "password": "password123"

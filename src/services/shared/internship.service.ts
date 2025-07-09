@@ -132,7 +132,7 @@ export const create_internship = async (body: NewInternship) => {
     console.error("Error adding internship:", error);
 
     // Customize known error responses
-    if (error.code === "23505") {
+    if (error?.cause?.code === "23505") {
       return {
         success: false,
         code: 409,

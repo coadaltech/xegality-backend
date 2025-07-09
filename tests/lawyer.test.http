@@ -1,0 +1,37 @@
+
+###
+POST http://localhost:4000/api/consumer/connect-lawyer
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjczNzkzNDA5NzA0LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUxOTc3NTcyLCJleHAiOjE3NTIwNjM5NzJ9.L6d-0GBCFliT3rItPmNtINpm3hA68zmjD5MA-O7rLlw
+
+{
+  "lawyer_id": 974101073030
+}
+
+###
+POST http://localhost:4000/api/case/add
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Nzc5Mjg1MzAyMzI2LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUxOTg2NDQ5LCJleHAiOjE3NTIwNzI4NDl9.5wgvzbJmFphHl5IsTXDtkLrmMOaa03FLdDlyyg1_twM
+
+{
+  "title": "Dhruv Sex Offender Case",
+  "description": "This is a case related to sexual offenses. It involves allegations of sexual misconduct and requires legal representation.",
+  "type": "criminal",
+  "assigned_to": "vakil sahab",
+  "status": "opened",
+  "priority": "low",
+  "open_date": "2025-07-08 14:14:28+05:30",
+  "consumer_id": 730962125220,
+  "consumer_name": "Dhruv bhenkaloda",
+  "consumer_phone": 1234567890,
+  "consumer_age": 14,
+  "consumer_address": "haweli ke peeche wali gali"
+}
+
+###
+GET http://localhost:4000/api/case/all
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjczNzkzNDA5NzA0LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUxOTc4NDY3LCJleHAiOjE3NTIwNjQ4Njd9.7daA7VAcPC6y14wL6Y9gQzKtUc7QZKpKgoLbA3ObHqQ
+
+###
+GET http://localhost:4000/api/consumer/dashboard/fetch-all-cases
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDM0OTk1OTUwOTc5LCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTIwNTA4MzcsImV4cCI6MTc1MjEzNzIzN30.g60Ea3INv5UnVVABpzZ8CYYiC35maICeeybc9so1VA4

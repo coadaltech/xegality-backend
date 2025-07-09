@@ -1,10 +1,10 @@
 import { Elysia, t } from "elysia";
-import { application_middleware, authenticate_jwt } from "../../middlewares";
+import { app_middleware, authenticate_jwt } from "../../middlewares";
 import {
   ApplyInternshipSchema,
   PostInternshipSchema,
   SearchInternshipSchema,
-} from "../../types/app.types";
+} from "../../types/internship.types";
 import {
   apply_internship,
   create_internship,
@@ -19,7 +19,7 @@ const internship_routes = new Elysia({ prefix: "/internship" })
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
-      const state = application_middleware({ cookie, headers });
+      const state = app_middleware({ cookie, headers });
 
       if (!state.data) {
         set.status = state.code;
@@ -185,3 +185,4 @@ const internship_routes = new Elysia({ prefix: "/internship" })
   });
 
 export default internship_routes;
+

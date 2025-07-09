@@ -1,6 +1,5 @@
 import { bigint, PgEnum, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { user_model } from "./user.model";
-import { TAGENUM } from "../../types/app.types";
 
 export const applied_internship_model = pgTable("applied_internships", {
   internship_id: bigint({ mode: "number" }).primaryKey().notNull().references(() => internship_model.id),
@@ -8,6 +7,7 @@ export const applied_internship_model = pgTable("applied_internships", {
   applied_at: timestamp({ withTimezone: true }).defaultNow(),
   status: text().default("applied"),
 });
+
 export const internship_model = pgTable("internships", {
   id: bigint({ mode: "number" }).primaryKey(),
   title: text().notNull(),
