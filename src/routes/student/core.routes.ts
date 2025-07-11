@@ -1,14 +1,13 @@
 import Elysia, { t } from "elysia";
 import { app_middleware } from "../../middlewares";
-import { update_lawyer_profile } from "../../services/lawyer/core.service";
-import { GENDER_CONST, LANGUAGES_CONST, LAWYER_FEE_CONST, PRACTICE_AREAS_CONST } from "../../types/user.types";
-import { LawyerProfileSchema } from "../../types/lawyer.types";
+import { StudentProfileSchema } from "../../types/student.types";
+import { update_student_profile } from "../../services/student/core.service";
 
-const lawyer_core_routes = new Elysia({ prefix: "/lawyer" })
+const student_core_routes = new Elysia({ prefix: "/student" })
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
-      const state_result = app_middleware({ cookie, headers, allowed: ["lawyer"] });
+      const state_result = app_middleware({ cookie, headers, allowed: ["student"] });
 
       set.status = state_result.code;
       if (!state_result.data) return state_result
@@ -22,15 +21,14 @@ const lawyer_core_routes = new Elysia({ prefix: "/lawyer" })
     async ({ set, store, body }) => {
 
       let body_id = { ...body, id: store.id }
-
-      const update_result = await update_lawyer_profile(body_id);
+      const update_result = await update_student_profile(body_id);
 
       set.status = update_result.code;
       return update_result;
     },
     {
-      body: LawyerProfileSchema
+      body: StudentProfileSchema
     }
   )
 
-export default lawyer_core_routes;
+export default student_core_routes;

@@ -1,8 +1,8 @@
 import db from "../../config/db"
+import { consumer_model } from "../../models/consumer/consumer.model";
 import { lawyer_model } from "../../models/lawyer/lawyer.model";
-import { user_connections_model } from "../../models/shared/chat.model"
-import { FiltersType } from "../../types/consumer.types";
-import { get_accessible_lawyers } from "./dashboard.service";
+import { user_model } from "../../models/shared/user.model";
+import { ConsumerProfileType, FiltersType } from "../../types/consumer.types";
 import { eq, or, and, arrayContains, gt, gte, lte } from "drizzle-orm";
 
 const get_filtered_lawyers = async (filters: FiltersType) => {
@@ -83,5 +83,72 @@ const get_filtered_lawyers = async (filters: FiltersType) => {
   }
 }
 
+const update_consumer_profile = async ({ id, name, gender, age, employment_status, marital_status, home_address, current_location, profile_picture }: ConsumerProfileType) => {
+  try {
+    if (name) {
+      const update_user_result = await db.update(user_model).set({ name }).where(eq(user_model.id, id)).returning();
 
-export { create_lawyer_connection, get_filtered_lawyers }
+      if (update_user_result.length === 0) {
+        return {
+          success: false,
+          code: 404,
+          message: "User not found",
+        };
+      }
+    }
+
+    const insert_or_update_consumer_result =
+      await db
+        .insert(consumer_model)
+        .values({
+          id,
+          gender,
+          age,
+          employment_status,
+          marital_status,
+          home_address,
+          current_location,
+          profile_picture
+        })
+        .onConflictDoUpdate({
+          target: lawyer_model.id,
+          set: {
+            gender,
+            age,
+            employment_status,
+            marital_status,
+            home_address,
+            current_location,
+            profile_picture
+          }
+        }).returning();
+
+    if (insert_or_update_consumer_result.length === 0) {
+      return {
+        success: false,
+        code: 404,
+        message: "Consumer profile not found",
+      };
+    }
+
+    return {
+      success: true,
+      code: 200,
+      message: "Consumer profile updated successfully",
+      data: { name: name, ...insert_or_update_consumer_result[0] },
+    }
+
+
+  } catch (error) {
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR update_consumer_profile",
+      error,
+    };
+  }
+
+}
+
+
+export { get_filtered_lawyers, update_consumer_profile }

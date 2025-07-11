@@ -1,6 +1,11 @@
 import { t } from 'elysia';
 import { GENDER_CONST, LANGUAGES_CONST, LAWYER_FEE_CONST, PRACTICE_AREAS_CONST, PracticeAreasType, GenderType, LanguagesType, LawyerFeeType } from './user.types';
 
+const EMPLOYMENT_STATUS_CONST = ['employed', 'unemployed', 'self_employed', 'student', 'retired'] as const;
+const MARITAL_STATUS_CONST = ['single', 'married', 'divorced', 'widowed'] as const;
+type EmploymentStatusType = (typeof EMPLOYMENT_STATUS_CONST)[number];
+type MaritalStatusType = (typeof MARITAL_STATUS_CONST)[number];
+
 interface FiltersType {
   gender?: GenderType
   experience?: number,
@@ -25,4 +30,28 @@ const FilterLawyerSchema = t.Object({
   rating: t.Optional(t.Number())
 });
 
-export { FiltersType, FilterLawyerSchema }
+interface ConsumerProfileType {
+  id: number,
+  name?: string,
+  gender?: GenderType,
+  age?: number,
+  employment_status?: EmploymentStatusType,
+  marital_status?: MaritalStatusType,
+  home_address?: string,
+  current_location?: string,
+  profile_picture?: string
+}
+
+const ConsumerProfileSchema = t.Object({
+  name: t.Optional(t.String()),
+  gender: t.Optional(t.Enum(Object.fromEntries(GENDER_CONST.map(g => [g, g])))),
+  age: t.Optional(t.Number()),
+  employment_status: t.Optional(t.Enum(Object.fromEntries(EMPLOYMENT_STATUS_CONST.map(x => [x, x])))),
+  marital_status: t.Optional(t.Enum(Object.fromEntries(MARITAL_STATUS_CONST.map(x => [x, x])))),
+  home_address: t.Optional(t.String()),
+  current_location: t.Optional(t.String()),
+  profile_picture: t.Optional(t.String())
+})
+
+
+export { FiltersType, FilterLawyerSchema, ConsumerProfileType, ConsumerProfileSchema, EMPLOYMENT_STATUS_CONST, EmploymentStatusType, MARITAL_STATUS_CONST, MaritalStatusType };

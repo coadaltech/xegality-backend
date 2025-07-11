@@ -1,28 +1,10 @@
 import db from "../../config/db";
 import { lawyer_model } from "../../models/lawyer/lawyer.model";
 import { user_model } from "../../models/shared/user.model";
-import { GenderType, LanguagesType, LawyerFeeType, PracticeAreasType } from "../../types/user.types"
+import { LawyerProfileType } from "../../types/lawyer.types";
 import { eq } from "drizzle-orm";
 
-interface LawyerProfile {
-  id: number,
-  name?: string,
-  experience?: number,
-  gender?: GenderType,
-  bio?: string,
-  bar_number?: string,
-  practice_area?: PracticeAreasType,
-  practice_location?: string,
-  practicing_courts?: string[],
-  home_address?: string,
-  languages?: LanguagesType[],
-  fee?: number,
-  fee_type?: LawyerFeeType,
-  rating?: number,
-  profile_picture?: string
-}
-
-const update_lawyer_profile = async ({ id, name, experience, gender, bio, bar_number, practice_area, practice_location, practicing_courts, home_address, languages, fee, fee_type, rating, profile_picture }: LawyerProfile) => {
+const update_lawyer_profile = async ({ id, name, experience, gender, age, bio, bar_number, bar_state, practice_area, practice_location, practicing_courts, home_address, languages, fee, fee_type, rating, profile_picture }: LawyerProfileType) => {
   try {
     if (name) {
       const update_user_result = await db.update(user_model).set({ name }).where(eq(user_model.id, id)).returning();
@@ -36,27 +18,53 @@ const update_lawyer_profile = async ({ id, name, experience, gender, bio, bar_nu
       }
     }
 
-    const update_lawyer_result = await db.update(lawyer_model).set({
-      experience,
-      gender,
-      bio,
-      bar_number,
-      practice_area,
-      practice_location,
-      practicing_courts,
-      home_address,
-      languages,
-      fee,
-      fee_type,
-      rating,
-      profile_picture
-    }).returning()
+    const insert_or_update_lawyer_result =
+      await db
+        .insert(lawyer_model)
+        .values({
+          id,
+          experience,
+          gender,
+          age,
+          bio,
+          bar_number,
+          bar_state,
+          practice_area,
+          practice_location,
+          practicing_courts,
+          home_address,
+          languages,
+          fee,
+          fee_type,
+          rating,
+          profile_picture
+        })
+        .onConflictDoUpdate({
+          target: lawyer_model.id,
+          set: {
+            experience,
+            gender,
+            age,
+            bio,
+            bar_number,
+            bar_state,
+            practice_area,
+            practice_location,
+            practicing_courts,
+            home_address,
+            languages,
+            fee,
+            fee_type,
+            rating,
+            profile_picture
+          }
+        }).returning();
 
-    if (update_lawyer_result.length === 0) {
+    if (insert_or_update_lawyer_result.length === 0) {
       return {
         success: false,
         code: 404,
-        message: "User not found",
+        message: "Lawyer profile not found",
       };
     }
 
@@ -64,7 +72,7 @@ const update_lawyer_profile = async ({ id, name, experience, gender, bio, bar_nu
       success: true,
       code: 200,
       message: "Lawyer profile updated successfully",
-      data: update_lawyer_result[0],
+      data: { name: name, ...insert_or_update_lawyer_result[0] },
     }
 
 

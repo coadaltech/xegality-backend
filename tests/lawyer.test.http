@@ -33,5 +33,26 @@ GET http://localhost:4000/api/case/all
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjczNzkzNDA5NzA0LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUxOTc4NDY3LCJleHAiOjE3NTIwNjQ4Njd9.7daA7VAcPC6y14wL6Y9gQzKtUc7QZKpKgoLbA3ObHqQ
 
 ###
-GET http://localhost:4000/api/consumer/dashboard/fetch-all-cases
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDM0OTk1OTUwOTc5LCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTIwNTA4MzcsImV4cCI6MTc1MjEzNzIzN30.g60Ea3INv5UnVVABpzZ8CYYiC35maICeeybc9so1VA4
+GET http://localhost:4000/api/consumer/dashboard/list-all-cases
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzMwOTYyMTI1MjIwLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTIxMzg1MzksImV4cCI6MTc1MjIyNDkzOX0.zxWzKK6KlWLFWH61WkJhqA8qNI2pQxg2hh3vTEtjcTI
+
+###
+PUT http://localhost:4000/api/student/update-profile
+Content-Type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzIwOTc5ODQ5ODY4LCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MjIzMzc1NiwiZXhwIjoxNzUyMzIwMTU2fQ.6PIyLIJlS1TTuAhN4-_iyOEQLznT1Telwbu2k9p_Trw
+
+{
+  "name": "student hai koi toh",
+  "experience": 18,
+  "gender": "male",
+  "bar_number": "CA384920",
+  "practice_area": "corporate",
+  "practice_location": "San Francisco, California",
+  "practicing_courts": ["California Supreme Court", "United States District Court - Northern District of California"],
+  "home_address": "456 Elm Street, San Francisco, CA 94107",
+  "languages": ["english", "hindi"],
+  "fee": 350,
+  "fee_type": "hourly",
+  "rating": 4.8,
+  "profile_picture": "https://example.com/profile-pictures/johnathan-miller.jpg"
+}

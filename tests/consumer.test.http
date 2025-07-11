@@ -4,10 +4,22 @@ GET http://localhost:4000/api/consumer/dashboard/fetch-accessible-lawyers
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjU5MjQ2NzkwNjAzLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTA5MjAxMzQsImV4cCI6MTc1MTAwNjUzNH0.7VRat0d8LWBFDK1xXGcDc61_86kGAj_k7MUG9WF1wUo
 
 ###
-POST http://localhost:4000/api/consumer/connect-lawyer
+PUT http://localhost:4000/api/consumer/update-profile
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjU5MjQ2NzkwNjAzLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTA5MjAxMzQsImV4cCI6MTc1MTAwNjUzNH0.7VRat0d8LWBFDK1xXGcDc61_86kGAj_k7MUG9WF1wUo
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NzMwOTYyMTI1MjIwLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTIyMzQ5MjksImV4cCI6MTc1MjMyMTMyOX0.2pvOJmbyo00C-jHgM8K9hnHgjJThmPyO01lxdN1csdg 
 
 {
-  "lawyer_id": 559209946558
+  "name": "consumer hai koi toh",
+  "experience": 18,
+  "gender": "male",
+  "bar_number": "CA384920",
+  "practice_area": "corporate",
+  "practice_location": "San Francisco, California",
+  "practicing_courts": ["California Supreme Court", "United States District Court - Northern District of California"],
+  "home_address": "456 Elm Street, San Francisco, CA 94107",
+  "languages": ["english", "hindi"],
+  "fee": 350,
+  "fee_type": "hourly",
+  "rating": 4.8,
+  "profile_picture": "https://example.com/profile-pictures/johnathan-miller.jpg"
 }

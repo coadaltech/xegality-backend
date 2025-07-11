@@ -9,7 +9,7 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
-      const state_result = app_middleware({ cookie, headers });
+      const state_result = app_middleware({ cookie, headers, allowed: ["lawyer"] });
 
       set.status = state_result.code;
       if (!state_result.data) return state_result
