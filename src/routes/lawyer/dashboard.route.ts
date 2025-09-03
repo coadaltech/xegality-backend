@@ -18,13 +18,13 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
       store.role = state_result.data.role;
     }
   })
-  .get("/all", async ({ set, store }) => {
+  .get("/fetch-all-cases", async ({ set, store }) => {
     const cases_response = await get_cases_list(store.id, store.role as RoleType);
 
     set.status = cases_response.code;
     return cases_response;
   })
-  .post("/add",
+  .post("/add-case",
     async ({ set, store, body }) => {
       console.log(store.id, store.role);
       const create_case_response = await create_new_case(body, store.id);

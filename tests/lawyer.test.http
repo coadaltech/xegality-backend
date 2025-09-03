@@ -1,6 +1,6 @@
+### 
 
-###
-POST http://localhost:4000/api/consumer/connect-lawyer
+POST http://localhost:4000/api/consumer/connect-lawyer HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjczNzkzNDA5NzA0LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUxOTc3NTcyLCJleHAiOjE3NTIwNjM5NzJ9.L6d-0GBCFliT3rItPmNtINpm3hA68zmjD5MA-O7rLlw
 
@@ -8,30 +8,74 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjczNzkzNDA5N
   "lawyer_id": 974101073030
 }
 
-###
-POST http://localhost:4000/api/case/add
+
+### 
+
+POST http://localhost:4000/api/lawyer/dashboard/add-case HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Nzc5Mjg1MzAyMzI2LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUxOTg2NDQ5LCJleHAiOjE3NTIwNzI4NDl9.5wgvzbJmFphHl5IsTXDtkLrmMOaa03FLdDlyyg1_twM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzgwMzE3MDYxNzExLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzU0NTU1MjEyLCJleHAiOjE3NTQ2NDE2MTJ9.HPoapkYafUt8z7LhARn46UDf3Hdng8P_byUgKTgTjx8
 
 {
-  "title": "Dhruv Sex Offender Case",
-  "description": "This is a case related to sexual offenses. It involves allegations of sexual misconduct and requires legal representation.",
-  "type": "criminal",
   "assigned_to": "vakil sahab",
-  "status": "opened",
-  "priority": "low",
-  "open_date": "2025-07-08 14:14:28+05:30",
-  "consumer_id": 730962125220,
+  "consumer_address": "haweli ke peeche wali gali",
+  "consumer_age": 14,
+  "consumer_id": 795097823423,
   "consumer_name": "Dhruv bhenkaloda",
   "consumer_phone": 1234567890,
-  "consumer_age": 14,
-  "consumer_address": "haweli ke peeche wali gali"
+  "description": "This is a case related to sexual offenses. It involves allegations of sexual misconduct and requires legal representation.",
+  "open_date": "2025-07-08 14:14:28+05:30",
+  "priority": "low",
+  "status": "opened",
+  "title": "Dhruv Sex Offender Case",
+  "type": "criminal"
 }
 
-###
-GET http://localhost:4000/api/case/all
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjczNzkzNDA5NzA0LCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUxOTc4NDY3LCJleHAiOjE3NTIwNjQ4Njd9.7daA7VAcPC6y14wL6Y9gQzKtUc7QZKpKgoLbA3ObHqQ
 
-###
-GET http://localhost:4000/api/consumer/dashboard/fetch-all-cases
+### 
+
+GET http://localhost:4000/api/lawyer/dashboard/fetch-all-cases HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzgwMzE3MDYxNzExLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzU0NTU1NzQ3LCJleHAiOjE3NTQ2NDIxNDd9.u9jndY0ED9GS_ZDXnC-5rfUNSj_ZjE3Hu1iBAMMTb4g
+
+
+### 
+
+GET http://localhost:4000/api/consumer/dashboard/list-all-cases HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NDM0OTk1OTUwOTc5LCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTIwNTA4MzcsImV4cCI6MTc1MjEzNzIzN30.g60Ea3INv5UnVVABpzZ8CYYiC35maICeeybc9so1VA4
+
+
+### 
+
+POST http://localhost:4000/api/lawyer/update-profile HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzgwMzE3MDYxNzExLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzU1NzU5ODMxLCJleHAiOjE3NTU4NDYyMzF9.s1yGoe57e4fWUDqdbrl-V6lNr5vb4KzF67OXV1U_ZtM
+
+{
+  "bar_number": "123456789",
+  "bio": "Saul Goodman is a seasoned criminal defense attorney with over 5 years of experience in handling complex legal cases. He is known for his strategic thinking and dedication to his clients.",
+  "experience": 5,
+  "fee_type": "hourly",
+  "languages": [
+    "english"
+  ],
+  "name": "Saul goodman 4",
+  "practice_areas": [
+    "criminal",
+    "family",
+    "civil"
+  ],
+  "practice_location": "Albuquerque, New Mexico"
+}
+
+
+### 
+
+POST http://localhost:4000/api/lawyer/update-profile HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzgwMzE3MDYxNzExLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzU1ODY2NzQxLCJleHAiOjE3NTU5NTMxNDF9.eTiNfKuze9JMI5DL_5N2uhf-Pl3GZkCpp2z-okwiljw
+
+{
+  "languages": [
+    "english",
+    "hindi"
+  ]
+}

@@ -2,7 +2,7 @@ import { eq, or } from "drizzle-orm";
 import db from "../../config/db"
 import { user_connections_model } from "../../models/shared/chat.model"
 import { case_model } from "../../models/shared/case.model";
-import { format_time_spent } from "../../utils";
+import { format_time_spent } from "@/utils/general.utils";
 import { application_model } from "../../models/ca/applications.model";
 
 const get_connected_lawyers = async (consumer_id: number) => {

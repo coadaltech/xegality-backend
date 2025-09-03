@@ -9,7 +9,7 @@ import {
   generate_refresh_jwt,
   random_otp,
   verify_refresh_token,
-} from "../../utils";
+} from "@/utils/general.utils";
 import { get_tokens, get_user_info } from "./google.service";
 import { JwtPayload } from "jsonwebtoken";
 import { otp_model } from "../../models/shared/otp.model";
@@ -59,7 +59,7 @@ const handle_login = async (password: string, value: number | string) => {
       };
     }
 
-    const access_token = generate_jwt(user.id, user.role);
+    const access_token = generate_jwt(user.id, user.role, user.is_profile_complete || false);
     const refresh_token = generate_refresh_jwt(user.id, user.role);
 
     await db.update(user_model).set({ refresh_token }).where(whereCondition);
@@ -87,9 +87,9 @@ const handle_login = async (password: string, value: number | string) => {
     };
   }
 };
-const create_tokens = async (id: number, role: string) => {
+const create_tokens = async (id: number, role: string, is_profile_complete: boolean) => {
   try {
-    const new_access_token = generate_jwt(id, role);
+    const new_access_token = generate_jwt(id, role, is_profile_complete);
     const new_refresh_token = generate_refresh_jwt(id, role);
     await db.update(user_model).set({ refresh_token: new_refresh_token });
     return {
@@ -229,7 +229,7 @@ const handle_google_callback = async ({ query, set }: any) => {
     // Login
     if (exisiting_user) {
       const refresh_token = generate_refresh_jwt(exisiting_user.id, role);
-      const access_token = generate_jwt(exisiting_user.id, role);
+      const access_token = generate_jwt(exisiting_user.id, role, exisiting_user.is_profile_complete || false);
       await db
         .update(user_model)
         .set({
@@ -288,7 +288,13 @@ const handle_login_by_token = async (payload: JwtPayload) => {
   try {
     const { id, role } = payload;
 
-    const access_token = generate_jwt(id, role);
+    const user = await db
+      .select()
+      .from(user_model)
+      .where(eq(user_model.id, id))
+      .then((rows) => rows[0]);
+
+    const access_token = generate_jwt(id, role, user.is_profile_complete || false);
     const refresh_token = generate_refresh_jwt(id, role);
 
     const updated_user = await db

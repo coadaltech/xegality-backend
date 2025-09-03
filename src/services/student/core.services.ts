@@ -1,25 +1,24 @@
 import db from "@/config/db";
-import { lawyer_profile_model, UpdateLawyerWithUserType } from "../../models/lawyer/lawyer.model";
+import { student_profile_model, UpdateStudentWithUserType } from "@/models/student/student.model";
 import { user_model } from "../../models/shared/user.model";
-import { GenderType, LanguagesType, LawyerFeeType, PracticeAreasType } from "../../types/user.types"
 import { eq, getTableColumns } from "drizzle-orm";
 import { undefinedToNull } from "@/utils/ts.utils";
 
-const get_lawyer_profile = async (id: number) => {
+const get_student_profile = async (id: number) => {
   const userColumns = getTableColumns(user_model);
-  const lawyerColumns = getTableColumns(lawyer_profile_model);
+  const studentColumns = getTableColumns(student_profile_model);
   // destructure to drop unwanted ones
   const { id: userId, role, created_at, refresh_token, hashed_password, ...safeUserColumns } = userColumns;
-  const { id: lawyerId, ...safeLawyerColumns } = lawyerColumns;
+  const { id: studentId, ...safeStudentColumns } = studentColumns;
 
   try {
     const result = await db
       .select({
         ...safeUserColumns,
-        ...safeLawyerColumns,
+        ...safeStudentColumns,
       })
       .from(user_model)
-      .leftJoin(lawyer_profile_model, eq(user_model.id, lawyer_profile_model.id))
+      .leftJoin(student_profile_model, eq(user_model.id, student_profile_model.id))
       .where(eq(user_model.id, id))
       .limit(1);
 
@@ -27,7 +26,7 @@ const get_lawyer_profile = async (id: number) => {
       return {
         success: false,
         code: 404,
-        message: "Lawyer profile not found",
+        message: "Student profile not found",
       };
     }
 
@@ -36,7 +35,7 @@ const get_lawyer_profile = async (id: number) => {
     return {
       success: true,
       code: 200,
-      message: "Lawyer profile fetched successfully",
+      message: "Student profile fetched successfully",
       data: profile,
     };
 
@@ -44,17 +43,17 @@ const get_lawyer_profile = async (id: number) => {
     return {
       success: false,
       code: 500,
-      message: "ERROR get_lawyer_profile",
+      message: "ERROR get_student_profile",
       error,
     };
   }
 };
 
-const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserType) => {
+const update_student_profile = async (id: number, profile: UpdateStudentWithUserType) => {
   try {
 
     if (profile.name) {
-      // name is not part of the lawyer profile, so we don't update it here
+      // name is not part of the student profile, so we don't update it here
       const user_update_result = await db.update(user_model)
         .set({ name: profile.name })
         .where(eq(user_model.id, id))
@@ -72,46 +71,44 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
     const refined_profile = undefinedToNull(profile)
     // Attempt update
     const update_result = await db
-      .update(lawyer_profile_model)
+      .update(student_profile_model)
       .set({
-        experience: refined_profile.experience,
         gender: refined_profile.gender,
         age: refined_profile.age,
-        bio: refined_profile.bio,
-        bar_number: refined_profile.bar_number,
-        practice_areas: refined_profile.practice_areas,
-        practice_location: refined_profile.practice_location,
-        practicing_courts: refined_profile.practicing_courts,
         home_address: refined_profile.home_address,
         languages: refined_profile.languages,
-        fee: refined_profile.fee,
-        fee_type: refined_profile.fee_type,
-        rating: refined_profile.rating,
         profile_picture: profile.profile_picture,
+        university_name: refined_profile.university_name,
+        degree: refined_profile.degree,
+        grades: refined_profile.grades,
+        passing_year: refined_profile.passing_year,
+        practice_area_interests: refined_profile.practice_area_interests,
+        prior_internships: refined_profile.prior_internships,
+        cv_resume: refined_profile.cv_resume,
+        linkedin_url: refined_profile.linkedin_url,
+        availability: refined_profile.availability,
+        preferred_locations: refined_profile.preferred_locations,
+        remote_ok: refined_profile.remote_ok,
       })
-      .where(eq(lawyer_profile_model.id, id))
+      .where(eq(student_profile_model.id, id))
       .returning();
 
     if (update_result.length > 0) {
       return {
         success: true,
         code: 200,
-        message: "Lawyer profile updated successfully",
+        message: "Student profile updated successfully",
         data: update_result[0],
       };
     }
 
     // Validate required fields before inserting
     if (
-      !profile.experience ||
       !profile.gender ||
       !profile.age ||
-      !profile.bio ||
-      !profile.bar_number ||
-      !profile.practice_areas ||
-      !profile.practice_location ||
       !profile.languages ||
-      !profile.fee_type
+      !profile.university_name ||
+      !profile.practice_area_interests
     ) {
       return {
         success: false,
@@ -120,25 +117,28 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
       };
     }
 
-    // Insert new lawyer profile
+    // Insert new student profile
+    console.log("inserting new profile ->", profile)
     const insert_result = await db
-      .insert(lawyer_profile_model)
+      .insert(student_profile_model)
       .values({
         id: id,
-        experience: profile.experience,
         gender: profile.gender,
         age: profile.age,
-        bio: profile.bio,
-        bar_number: profile.bar_number,
-        practice_areas: profile.practice_areas,
-        practice_location: profile.practice_location,
-        practicing_courts: profile.practicing_courts,
         home_address: profile.home_address,
         languages: profile.languages,
-        fee: profile.fee,
-        fee_type: profile.fee_type,
-        rating: profile.rating,
         profile_picture: profile.profile_picture,
+        university_name: profile.university_name,
+        degree: profile.degree,
+        grades: profile.grades,
+        passing_year: profile.passing_year,
+        practice_area_interests: profile.practice_area_interests,
+        prior_internships: profile.prior_internships,
+        cv_resume: profile.cv_resume,
+        linkedin_url: profile.linkedin_url,
+        availability: profile.availability,
+        preferred_locations: profile.preferred_locations,
+        remote_ok: profile.remote_ok,
       })
       .returning();
 
@@ -151,7 +151,7 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
     return {
       success: true,
       code: 201,
-      message: "Lawyer profile created successfully",
+      message: "Student profile created successfully",
       data: insert_result[0],
     };
 
@@ -159,10 +159,11 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
     return {
       success: false,
       code: 500,
-      message: "ERROR update_lawyer_profile",
+      message: "ERROR update_student_profile",
       error: error.message,
     };
   }
 };
 
-export { update_lawyer_profile, get_lawyer_profile }
+export { update_student_profile, get_student_profile }
+

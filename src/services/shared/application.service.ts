@@ -2,7 +2,7 @@ import db from "../../config/db";
 import { application_model } from "../../models/ca/applications.model";
 import { eq } from "drizzle-orm";
 import { RoleType } from "../../types/user.types";
-import { format_time_spent } from "../../utils";
+import { format_time_spent } from "@/utils/general.utils";
 
 const get_applications_list = async (id: number, role: RoleType) => {
   try {

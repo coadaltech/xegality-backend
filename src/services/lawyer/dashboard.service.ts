@@ -1,9 +1,9 @@
 import db from "../../config/db";
 import { case_model } from "../../models/shared/case.model";
 import { PostCaseType } from "../../types/case.types";
-import { generate_case_id } from "../../utils";
+import { generate_case_id } from "@/utils/general.utils";
 import { find_case_by_id } from "../shared/case.service";
-import { create_user } from "../shared/user.service";
+import { create_user, find_user_by_id } from "../shared/user.service";
 
 export const create_new_case = async (body: PostCaseType, assigned_by_id: number) => {
   try {
@@ -23,6 +23,17 @@ export const create_new_case = async (body: PostCaseType, assigned_by_id: number
 
       // fetch the created user ID
       body.consumer_id = create_user_result.data.user_id;
+    }
+    else {
+      // Validate existing consumer_id
+      const existing_user = await find_user_by_id(body.consumer_id);
+      if (!existing_user.success) {
+        return {
+          success: false,
+          code: 404,
+          message: "Consumer not found with the provided ID",
+        };
+      }
     }
 
     const result = await db

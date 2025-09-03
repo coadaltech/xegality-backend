@@ -36,7 +36,6 @@ const fetch_info = (token: string, receiver_id: number) => {
 }
 
 const web_socket = new Elysia()
-
   .ws('/chat', {
     // on connection request
     open: (ws) => {
@@ -92,6 +91,8 @@ const web_socket = new Elysia()
         ws.close(fetch_info_results.code, fetch_info_results.message);
         return;
       }
+
+      console.log("you don't have to do this string:string bullshit IG, just store ws for a randomly generated id and use that to send messages (just like in cricstock)");
 
       const { user_id, user_role } = fetch_info_results;
       const channel = `${user_id}:${receiver_id}`;

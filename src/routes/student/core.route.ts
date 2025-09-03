@@ -1,13 +1,13 @@
 import Elysia, { t } from "elysia";
 import { app_middleware } from "../../middlewares";
-import { get_lawyer_profile, update_lawyer_profile } from "../../services/lawyer/core.service";
-import { LawyerProfileSchema } from "../../types/lawyer.types";
+import { StudentProfileSchema } from "@/types/student.types";
+import { get_student_profile, update_student_profile } from "@/services/student/core.services";
 
-const lawyer_core_routes = new Elysia({ prefix: "/lawyer" })
+const student_core_routes = new Elysia({ prefix: "/student" })
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
-      const state_result = app_middleware({ cookie, headers, allowed: ["lawyer"] });
+      const state_result = app_middleware({ cookie, headers, allowed: ["student"] });
 
       set.status = state_result.code;
       if (!state_result.data) return state_result
@@ -17,18 +17,19 @@ const lawyer_core_routes = new Elysia({ prefix: "/lawyer" })
     }
   })
   .get("/fetch-profile", async ({ set, store }) => {
-    const profile_result = await get_lawyer_profile(store.id);
+    const profile_result = await get_student_profile(store.id);
 
     set.status = profile_result.code;
     return profile_result;
   })
   .post("/update-profile", async ({ body, set, store }) => {
-    const update_result = await update_lawyer_profile(store.id, body);
+    const update_result = await update_student_profile(store.id, body);
 
     set.status = update_result.code;
     return update_result;
   }, {
-    body: LawyerProfileSchema
+    body: StudentProfileSchema
   })
 
-export default lawyer_core_routes;
+export default student_core_routes;
+

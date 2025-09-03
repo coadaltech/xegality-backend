@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import "dotenv/config";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 const random_otp = () => {
   return Math.floor(1000 + Math.random() * 9000);
@@ -36,8 +36,8 @@ const hash_password = async (password: string): Promise<string> => {
   return hashed_password;
 };
 
-const generate_jwt = (id: number, role: string) => {
-  return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
+const generate_jwt = (id: number, role: string, is_profile_complete?: boolean) => {
+  return jwt.sign({ id, role, is_profile_complete: is_profile_complete || false }, process.env.ACCESS_KEY || "heymama", {
     expiresIn: "1d",
   });
 };

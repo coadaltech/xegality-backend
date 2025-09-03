@@ -3,7 +3,7 @@ import db from "../../config/db";
 import { case_model, } from "../../models/shared/case.model";
 import { PostCaseType } from "../../types/case.types";
 import { RoleType } from "../../types/user.types";
-import { format_time_spent } from "../../utils";
+import { format_time_spent } from "@/utils/general.utils";
 
 const get_cases_list = async (id: number, role: RoleType) => {
   try {
@@ -18,7 +18,7 @@ const get_cases_list = async (id: number, role: RoleType) => {
           status: case_model.status,
         })
         .from(case_model)
-        .where(eq(role === "lawyer" ? case_model.assigned_to : case_model.consumer_id, id))
+        .where(eq(role === "lawyer" ? case_model.assigned_by : case_model.consumer_id, id))
 
     if (db_result.length === 0) {
       return {

@@ -1,87 +1,143 @@
-import db from "../../config/db"
-import { lawyer_model } from "../../models/lawyer/lawyer.model";
-import { user_connections_model } from "../../models/shared/chat.model"
-import { FiltersType } from "../../types/consumer.types";
-import { get_accessible_lawyers } from "./dashboard.service";
-import { eq, or, and, arrayContains, gt, gte, lte } from "drizzle-orm";
+import db from "@/config/db";
+import { consumer_profile_model, UpdateConsumerWithUserType } from "@/models/consumer/consumer.model";
+import { user_model } from "@/models/shared/user.model";
+import { undefinedToNull } from "@/utils/ts.utils";
+import { getTableColumns, eq } from "drizzle-orm";
 
-const get_filtered_lawyers = async (filters: FiltersType) => {
+
+const get_consumer_profile = async (id: number) => {
+  const userColumns = getTableColumns(user_model);
+  const consumerColumns = getTableColumns(consumer_profile_model);
+  // destructure to drop unwanted ones
+  const { id: userId, role, created_at, refresh_token, hashed_password, ...safeUserColumns } = userColumns;
+  const { id: consumerId, ...safeConsumerColumns } = consumerColumns;
+
   try {
-    let conditions: any[] = [];
+    const result = await db
+      .select({
+        ...safeUserColumns,
+        ...safeConsumerColumns,
+      })
+      .from(user_model)
+      .leftJoin(consumer_profile_model, eq(user_model.id, consumer_profile_model.id))
+      .where(eq(user_model.id, id))
+      .limit(1);
 
-    if (filters.gender) {
-      conditions.push(eq(lawyer_model.gender, filters.gender));
+    if (result.length === 0) {
+      return {
+        success: false,
+        code: 404,
+        message: "Consumer profile not found",
+      };
     }
 
-    if (filters.experience) {
-      conditions.push(eq(lawyer_model.experience, filters.experience));
-    }
+    const profile = result[0];
 
-    if (filters.bar_state) {
-      conditions.push(eq(lawyer_model.bar_state, filters.bar_state));
-    }
+    return {
+      success: true,
+      code: 200,
+      message: "Consumer profile fetched successfully",
+      data: profile,
+    };
 
-    if (filters.practice_area) {
-      conditions.push(eq(lawyer_model.practice_area, filters.practice_area));
-    }
-
-    if (filters.practice_location) {
-      conditions.push(eq(lawyer_model.practice_location, filters.practice_location));
-    }
-
-    if (filters.languages && filters.languages.length > 0) {
-      conditions.push(arrayContains(lawyer_model.languages, filters.languages));
-    }
-
-    if (filters.fee_range) {
-      conditions.push(and(gte(lawyer_model.fee, filters.fee_range[0]), lte(lawyer_model.fee, filters.fee_range[1])));
-    }
-
-    if (filters.fee_type) {
-      conditions.push(eq(lawyer_model.fee_type, filters.fee_type));
-    }
-
-    if (filters.rating) {
-      conditions.push(eq(lawyer_model.rating, filters.rating));
-    }
-
-    if (conditions.length > 0) {
-      try {
-
-        const db_results = await db.select().from(lawyer_model).where(and(...conditions));
-        if (db_results.length === 0) {
-          return {
-            success: true,
-            code: 404,
-            message: "No lawyers found with the specified filters",
-            data: [],
-          };
-        }
-
-        return {
-          success: true,
-          code: 200,
-          message: "Filtered lawyers retrieved successfully",
-          data: db_results,
-        };
-      }
-      catch (error) {
-        return {
-          success: false,
-          code: 500,
-          message: "ERROR in query construction for get_filtered_lawyers",
-        };
-      }
-    }
-  }
-  catch (error) {
+  } catch (error) {
+    console.error("ERROR get_consumer_profile:", error);
     return {
       success: false,
       code: 500,
-      message: "ERROR get_filtered_lawyers",
+      message: "ERROR get_consumer_profile",
+      error,
     };
   }
-}
+};
 
+const update_consumer_profile = async (id: number, profile: UpdateConsumerWithUserType) => {
+  try {
 
-export { create_lawyer_connection, get_filtered_lawyers }
+    if (profile.name) {
+      // name is not part of the consumer profile, so we don't update it here
+      const user_update_result = await db.update(user_model)
+        .set({ name: profile.name })
+        .where(eq(user_model.id, id))
+        .returning();
+
+      if (user_update_result.length === 0) {
+        return {
+          success: false,
+          code: 404,
+          message: "Could not update user name, user not found",
+        };
+      }
+    }
+
+    const refined_profile = undefinedToNull(profile)
+    // Attempt update
+    const update_result = await db
+      .update(consumer_profile_model)
+      .set({
+        gender: refined_profile.gender,
+        marital_status: refined_profile.marital_status,
+        age: refined_profile.age,
+        home_address: refined_profile.home_address,
+        postal_pincode: refined_profile.postal_pincode,
+        profile_picture: refined_profile.profile_picture,
+      })
+      .where(eq(consumer_profile_model.id, id))
+      .returning();
+
+    if (update_result.length > 0) {
+      return {
+        success: true,
+        code: 200,
+        message: "Consumer profile updated successfully",
+        data: update_result[0],
+      };
+    }
+
+    // Validate required fields before inserting
+    if (!profile.gender || !profile.age) {
+      return {
+        success: false,
+        code: 400,
+        message: "Failed to create profile, missing All required fields",
+      };
+    }
+
+    // Insert new consumer profile
+    const insert_result = await db
+      .insert(consumer_profile_model)
+      .values({
+        id: id,
+        gender: profile.gender,
+        age: profile.age,
+        marital_status: profile.marital_status,
+        home_address: profile.home_address,
+        postal_pincode: profile.postal_pincode,
+        profile_picture: profile.profile_picture,
+      })
+      .returning();
+
+    // Mark user as profile completed
+    await db
+      .update(user_model)
+      .set({ is_profile_complete: true })
+      .where(eq(user_model.id, id))
+
+    return {
+      success: true,
+      code: 201,
+      message: "Consumer profile created successfully",
+      data: insert_result[0],
+    };
+
+  } catch (error: any) {
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR update_consumer_profile",
+      error: error.message,
+    };
+  }
+};
+
+export { get_consumer_profile, update_consumer_profile };

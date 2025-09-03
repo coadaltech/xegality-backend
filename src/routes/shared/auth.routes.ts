@@ -4,7 +4,7 @@ import { get_consent_url } from "../../services/shared/google.service";
 import { verify_otp } from "../../services/shared/otp.service";
 import { create_user } from "../../services/shared/user.service";
 import { GenerateOtpSchema, VerifyUserSchema, LoginSchema, VerifyLoginOtpSchema, GoogleCallbackSchema } from "../../types/auth.types";
-import { verify_access_token } from "../../utils";
+import { verify_access_token } from "@/utils/general.utils";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
   // SIGNUP
@@ -14,9 +14,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       const { phone, email } = body;
       if (!phone && !email) {
         set.status = 400;
-        console.log(
-          `[SERVER]   Phone or Email Missing : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Phone or Email Missing : ${new Date().toLocaleString()}`);
         return {
           success: false,
           code: 404,
@@ -78,49 +76,45 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         console.log(`[SERVER]   OTP Verified : ${new Date().toLocaleString()}`);
         return otpResponse;
       }
-      const creating_user_response = await create_user(
+      const create_user_res = await create_user(
         name,
         password,
         role,
         phone,
         email
       );
-      if (!creating_user_response?.success) {
-        set.status = creating_user_response?.code;
+      if (!create_user_res?.success) {
+        set.status = create_user_res?.code;
         console.log(
           `[SERVER]   User Creation Failed : ${new Date().toLocaleString()}`
         );
-        return creating_user_response;
+        return create_user_res;
       }
-      set.status = creating_user_response.code;
+      set.status = create_user_res.code;
       if (
-        creating_user_response.success &&
-        creating_user_response.data?.refresh_token &&
-        creating_user_response.data?.access_token
+        create_user_res.success &&
+        create_user_res.data?.refresh_token &&
+        create_user_res.data?.access_token
       ) {
         cookie["refresh_token"].set({
-          value: creating_user_response.data.refresh_token,
+          value: create_user_res.data.refresh_token,
           httpOnly: true,
           secure: true,
           maxAge: 60 * 60 * 24 * 7,
           path: "/",
         });
         cookie["access_token"].set({
-          value: creating_user_response.data.access_token,
+          value: create_user_res.data.access_token,
           httpOnly: true,
           secure: true,
           maxAge: 60 * 60 * 24,
           path: "/",
         });
-        console.log(
-          `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`);
       }
 
-      console.log(
-        `[SERVER]   User Created Success : ${new Date().toLocaleString()}`
-      );
-      return creating_user_response;
+      console.log(`[SERVER]   User Created Success : ${new Date().toLocaleString()}`);
+      return create_user_res;
     },
     { body: VerifyUserSchema }
   )
@@ -129,9 +123,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
   .get("/refresh-tokens", async ({ cookie, set }) => {
     const refresh_token = cookie.refresh_token;
     if (!refresh_token) {
-      console.log(
-        `[SERVER]   No Refresh Token Found : ${new Date().toLocaleString()}`
-      );
+      console.log(`[SERVER]   No Refresh Token Found : ${new Date().toLocaleString()}`);
       return {
         success: true,
         code: 404,
@@ -144,9 +136,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     );
     if (!validation_response.success) {
       set.status = validation_response.code;
-      console.log(
-        `[SERVER]   Invalid Refresh Token : ${new Date().toLocaleString()}`
-      );
+      console.log(`[SERVER]   Invalid Refresh Token : ${new Date().toLocaleString()}`);
       return validation_response;
     }
     const data = await create_tokens(
@@ -155,9 +145,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     );
     if (!data?.success) {
       set.status = data?.code;
-      console.log(
-        `[SERVER]   Token Creation Failed : ${new Date().toLocaleString()}`
-      );
+      console.log(`[SERVER]   Token Creation Failed : ${new Date().toLocaleString()}`);
       return data;
     }
     set.status = data.code;
@@ -180,14 +168,10 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         maxAge: 60 * 60 * 24,
         path: "/",
       });
-      console.log(
-        `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
-      );
+      console.log(`[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`);
     }
     set.status = data.code;
-    console.log(
-      `[SERVER]   Token Creation Success : ${new Date().toLocaleString()}`
-    );
+    console.log(`[SERVER]   Token Creation Success : ${new Date().toLocaleString()}`);
     return data;
   })
 
@@ -225,9 +209,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       }
       if (!body.phone && !body.email) {
         set.status = 400;
-        console.log(
-          `[SERVER]   Phone or Email Missing : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Phone or Email Missing : ${new Date().toLocaleString()}`);
         return {
           success: false,
           code: 404,
@@ -236,9 +218,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       }
       const value = body.phone ?? body.email;
       if (!value) {
-        console.log(
-          `[SERVER]   Invalid Email or : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Invalid Email or : ${new Date().toLocaleString()}`);
         return {
           success: false,
           code: 401,
@@ -265,9 +245,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           maxAge: 60 * 60 * 24,
           path: "/",
         });
-        console.log(
-          `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`);
       }
       console.log(`[SERVER]   Update Tokens : ${new Date().toLocaleString()}`);
       set.status = response?.code;
@@ -281,9 +259,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       const { phone, email } = body;
       if (!phone && !email) {
         set.status = 400;
-        console.log(
-          `[SERVER]   Email or Phone Missing : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Email or Phone Missing : ${new Date().toLocaleString()}`);
         return {
           success: false,
           code: 404,
@@ -293,9 +269,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
 
       const value = phone ?? email;
       if (!value) {
-        console.log(
-          `[SERVER]   Invalid Email or Phone : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Invalid Email or Phone : ${new Date().toLocaleString()}`);
         return {
           success: false,
           message: "Value is neither Phone nor Email",
@@ -305,9 +279,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       const otpResponse = await verify_otp(body.otp, value);
       if (otpResponse.success == false) {
         set.status = otpResponse.code;
-        console.log(
-          `[SERVER]   OTP is Invalid : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   OTP is Invalid : ${new Date().toLocaleString()}`);
         return otpResponse;
       }
     },
@@ -326,9 +298,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       return { succes: false, code: 404, message: "Invalid Role In Query" };
     }
     const link = get_consent_url(role);
-    console.log(
-      `[SERVER]    Consent Link Generated : ${new Date().toLocaleString()}`
-    );
+    console.log(`[SERVER]    Consent Link Generated : ${new Date().toLocaleString()}`);
     return { link };
   })
   .get(
@@ -356,13 +326,9 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           maxAge: 60 * 60 * 24,
           path: "/",
         });
-        console.log(
-          `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
-        );
+        console.log(`[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`);
       }
-      console.log(
-        `[SERVER]    Google Login Success : ${new Date().toLocaleString()}`
-      );
+      console.log(`[SERVER]    Google Login Success : ${new Date().toLocaleString()}`);
       return response;
     },
     {
@@ -376,9 +342,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     const access_token = cookie["access_token"].value;
     if (!existing_token && !access_token) {
       set.status = 404;
-      console.log(
-        `[SERVER]   Already Logged Out : ${new Date().toLocaleString()}`
-      );
+      console.log(`[SERVER]   Already Logged Out : ${new Date().toLocaleString()}`);
       return {
         success: true,
         message: "Already Logged Out",

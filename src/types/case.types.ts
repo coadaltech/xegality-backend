@@ -32,7 +32,7 @@ type PostCaseType = {
   timeline?: TimelineEntry[],
 }
 
-export const PostCaseSchema = t.Object({
+const PostCaseSchema = t.Object({
   title: t.String(),
   description: t.String(),
   type: t.Enum(Object.fromEntries(PRACTICE_AREAS_CONST.map(area => [area, area]))),
@@ -54,4 +54,4 @@ export const PostCaseSchema = t.Object({
   }))),
 });
 
-export { TimelineEntry, PostCaseType, STATUS_CONST, StatusType, PRIRORITY_CONST, PriorityType };
+export { TimelineEntry, PostCaseType, PostCaseSchema, STATUS_CONST, StatusType, PRIRORITY_CONST, PriorityType };

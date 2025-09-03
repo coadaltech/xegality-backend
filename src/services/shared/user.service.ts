@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
 import { RoleType } from "../../types/user.types";
-import { create_unique_id, generate_jwt, generate_refresh_jwt, hash_password } from "../../utils";
+import { create_unique_id, generate_jwt, generate_refresh_jwt, hash_password } from "@/utils/general.utils";
 
 export const find_user_by_id = async (id: number) => {
   try {
@@ -90,7 +90,7 @@ export const create_user = async (
 
     const hashed_password = await hash_password(password);
 
-    const access_token = generate_jwt(user_id, role);
+    const access_token = generate_jwt(user_id, role, false);
     const refresh_token = generate_refresh_jwt(user_id, role);
 
     await db

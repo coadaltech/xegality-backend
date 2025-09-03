@@ -1,10 +1,11 @@
-const ROLE_CONST = ["consumer", "lawyer", "student", "paralegal", "ca"] as const;
-
+const ROLE_CONST = ["consumer", "lawyer", "student", "paralegal", "ca", "admin"] as const;
 const GENDER_CONST = ["male", "female"] as const;
+const MARITAL_STATUS_CONST = ["single", "married", "divorced", "widowed", "separated"] as const;
 
 const LAWYER_FEE_CONST = [
   "fixed",
   "hourly",
+  "per_consultation",
   "contingency",
   "pro_bono",
   "sliding_scale",
@@ -12,39 +13,39 @@ const LAWYER_FEE_CONST = [
 ] as const;
 
 const LANGUAGES_CONST = [
-  "English",
-  "Assamese",
-  "Bengali",
-  "Bodo",
-  "Dogri",
-  "Gujarati",
-  "Hindi",
-  "Kannada",
-  "Kashmiri",
-  "Konkani",
-  "Maithili",
-  "Malayalam",
-  "Manipuri",
-  "Marathi",
-  "Nepali",
-  "Odia",
-  "Punjabi",
-  "Sanskrit",
-  "Santali",
-  "Sindhi",
-  "Tamil",
-  "Telugu",
-  "Urdu",
-  "Tulu",
-  "Bhojpuri",
-  "Rajasthani",
-  "Haryanvi",
-  "Chhattisgarhi",
-  "Mizo",
-  "Khasi",
-  "Nagamese",
-  "Mundari",
-  "Gondi"
+  "english",
+  "assamese",
+  "bengali",
+  "bodo",
+  "dogri",
+  "gujarati",
+  "hindi",
+  "kannada",
+  "kashmiri",
+  "konkani",
+  "maithili",
+  "malayalam",
+  "manipuri",
+  "marathi",
+  "nepali",
+  "odia",
+  "punjabi",
+  "sanskrit",
+  "santali",
+  "sindhi",
+  "tamil",
+  "telugu",
+  "urdu",
+  "tulu",
+  "bhojpuri",
+  "rajasthani",
+  "haryanvi",
+  "chhattisgarhi",
+  "mizo",
+  "khasi",
+  "nagamese",
+  "mundari",
+  "gondi"
 ] as const
 
 const PRACTICE_AREAS_CONST = [
@@ -70,10 +71,12 @@ const PRACTICE_AREAS_CONST = [
   "contract"
 ] as const;
 
+
 type RoleType = typeof ROLE_CONST[number];
 type GenderType = typeof GENDER_CONST[number];
+type MaritalStatusType = typeof MARITAL_STATUS_CONST[number];
 type LanguagesType = typeof LANGUAGES_CONST[number];
 type LawyerFeeType = typeof LAWYER_FEE_CONST[number];
 type PracticeAreasType = typeof PRACTICE_AREAS_CONST[number];
 
-export { ROLE_CONST, RoleType, GENDER_CONST, GenderType, LAWYER_FEE_CONST, LawyerFeeType, LANGUAGES_CONST, LanguagesType, PRACTICE_AREAS_CONST, PracticeAreasType };
+export { ROLE_CONST, RoleType, GENDER_CONST, GenderType, MARITAL_STATUS_CONST, MaritalStatusType, LAWYER_FEE_CONST, LawyerFeeType, LANGUAGES_CONST, LanguagesType, PRACTICE_AREAS_CONST, PracticeAreasType };

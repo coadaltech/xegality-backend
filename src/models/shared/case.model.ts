@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, date, varchar, char, bigint, json, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, date, varchar, char, bigint, pgEnum, jsonb } from "drizzle-orm/pg-core";
 import { STATUS_CONST, PRIRORITY_CONST, TimelineEntry } from "../../types/case.types";
 import { user_model } from "./user.model";
 import { PRACTICE_AREAS_CONST } from "../../types/user.types";
@@ -19,11 +19,16 @@ export const case_model = pgTable("cases", {
   consumer_age: integer().notNull(),
   consumer_address: text().notNull(),
   consumer_documents: text().array().default([]),
-  timeline: json().$type<TimelineEntry[]>().default([{
+  timeline: jsonb().default([{
     id: 1,
     title: "Case Opened",
     description: "Case is initiated",
   }]),
+  // timeline: jsonb().$type<TimelineEntry[]>().default([{
+  //   id: 1,
+  //   title: "Case Opened",
+  //   description: "Case is initiated",
+  // }]),
   created_at: timestamp().defaultNow(),
   updated_at: timestamp().defaultNow(),
 });

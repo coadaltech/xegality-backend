@@ -13,7 +13,7 @@ import {
   get_internships,
   search_internships,
 } from "../../services/shared/internship.service";
-import { create_unique_id } from "../../utils";
+import { create_unique_id } from "@/utils/general.utils";
 
 const internship_routes = new Elysia({ prefix: "/internship" })
   .state({ id: 0, role: "" })

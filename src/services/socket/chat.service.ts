@@ -10,6 +10,7 @@ interface ChatMessage {
   seen?: boolean;
   created_at: Date;
 }
+
 const store_massage = async ({ from, to, content, attachment_url, attachment_type, seen, created_at }: ChatMessage) => {
   try {
 

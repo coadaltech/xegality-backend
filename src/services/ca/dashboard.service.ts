@@ -1,8 +1,8 @@
-import db from "../../config/db";
-import { application_model } from "../../models/ca/applications.model";
+import db from "@/config/db";
+import { application_model } from "@/models/ca/applications.model";
 import { eq } from "drizzle-orm";
-import { ApplicationType } from "../../types/ca.types";
-import { generate_application_id } from "../../utils";
+import { ApplicationType } from "@/types/ca.types";
+import { generate_application_id } from "@/utils/general.utils";
 import { find_application_by_id } from "./core.service";
 import { create_user } from "../shared/user.service";
 

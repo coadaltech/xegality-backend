@@ -1,59 +1,70 @@
-###
-POST http://localhost:4000/api/auth/generate-otp?mode=signup
+### 
+
+POST http://localhost:4000/api/auth/generate-otp?mode=signup HTTP/1.1
 Content-Type: application/json
 
 {
   "email": "consumer@gmail.com"
 }
 
-###
-POST http://localhost:4000/api/auth/generate-otp
+
+### 
+
+POST http://localhost:4000/api/auth/generate-otp HTTP/1.1
 Content-Type: application/json
 
 {
-  "email": "lawyer9@gmail.com"
+  "email": "lawyer@gmail.com"
 }
 
-###
-POST http://localhost:4000/api/auth/generate-otp
+
+### 
+
+POST http://localhost:4000/api/auth/generate-otp HTTP/1.1
 Content-Type: application/json
 
 {
   "email": "student@gmail.com"
 }
 
-###
-POST http://localhost:4000/api/auth/verify-signup-otp
+
+### 
+
+POST http://localhost:4000/api/auth/verify-signup-otp HTTP/1.1
 Content-Type: application/json
 
 {
-  "email": "consumer12@gmail.com",
-  "otp": 1234,
+  "email": "consumer@gmail.com",
   "name": "consumer",
-  "role": "consumer",
-  "password": "password123"
+  "otp": 1234,
+  "password": "password123",
+  "role": "consumer"
 }
 
-###
-POST http://localhost:4000/api/auth/verify-signup-otp
+
+### 
+
+POST http://localhost:4000/api/auth/verify-signup-otp HTTP/1.1
 Content-Type: application/json
 
 {
-  "email": "lawyer97@gmail.com",
+  "email": "lawyer@gmail.com",
+  "name": "lawyer",
   "otp": 1234,
-  "name": "lawyer8",
-  "role": "lawyer",
-  "password": "password123"
+  "password": "password123",
+  "role": "lawyer"
 }
 
-###
-POST http://localhost:4000/api/auth/verify-signup-otp
+
+### 
+
+POST http://localhost:4000/api/auth/verify-signup-otp HTTP/1.1
 Content-Type: application/json
 
 {
   "email": "student19@gmail.com",
-  "otp": 1234,
   "name": "student",
-  "role": "student",
-  "password": "password123"
+  "otp": 1234,
+  "password": "password123",
+  "role": "student"
 }
