@@ -2,16 +2,19 @@ import { pgTable, bigint, serial, varchar, integer, text, json, timestamp, char 
 import { user_model } from "../shared/user.model";
 import { TimelineEntry } from "../../types/case.types";
 import { APPLICATION_STATUS_CONST } from "../../types/ca.types";
+import { LEGAL_SERVICES_CONST } from "@/types/ca/applications.types";
+import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
-export const application_model = pgTable("applications", {
+const application_model = pgTable("applications", {
   id: varchar({ length: 50 }).primaryKey(),
   title: varchar({ length: 100 }).notNull(),
   description: text(),
-  category: varchar({ length: 80 }).notNull(),
+  category: varchar({ enum: LEGAL_SERVICES_CONST }).notNull(),
   status: varchar({ enum: APPLICATION_STATUS_CONST }).default("in_progress"),
   open_date: timestamp({ withTimezone: true }).notNull(),
-  handled_by: bigint({ mode: "number" }).notNull().references(() => user_model.id, { onDelete: 'cascade' }),
-  consumer_id: bigint({ mode: "number" }).notNull().references(() => user_model.id).notNull(),
+  handled_by: bigint({ mode: "number" }).references(() => user_model.id, { onDelete: 'cascade' }).notNull(),
+  ca_name: varchar({ length: 100 }).notNull(),
+  consumer_id: bigint({ mode: "number" }).references(() => user_model.id).notNull(),
   consumer_name: varchar({ length: 50 }).notNull(),
   consumer_phone: bigint({ mode: "number" }).notNull(),
   consumer_age: integer(),
@@ -26,4 +29,15 @@ export const application_model = pgTable("applications", {
   ]),
   updated_at: timestamp().defaultNow(),
 });
+
+
+type ApplicationType = InferSelectModel<typeof application_model>;
+type InsertApplicationType = Omit<InferInsertModel<typeof application_model>, 'updated_at'>;
+type UpdateApplicationType = Partial<InsertApplicationType>;
+type ApplicationTypeWithOptionalConsumer = Omit<InsertApplicationType, "consumer_id"> & {
+  consumer_id?: number | null | undefined;
+};
+
+export { application_model };
+export type { ApplicationType, InsertApplicationType, UpdateApplicationType, ApplicationTypeWithOptionalConsumer };
 

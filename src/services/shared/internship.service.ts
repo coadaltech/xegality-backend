@@ -114,6 +114,7 @@ export const get_applied_internships = async (id: number) => {
     };
   }
 };
+
 export const create_internship = async (body: NewInternship) => {
   try {
 
@@ -223,34 +224,6 @@ export const search_internships = async (query: string) => {
       success: false,
       code: 500,
       message: "Failed to search internship opportunities",
-      error: String(error),
-    };
-  }
-};
-export const delete_expired_internships = async () => {
-  try {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const deleted = await db
-      .delete(internship_model)
-      .where(lt(internship_model.application_deadline, oneDayAgo))
-      .returning();
-
-    return {
-      success: true,
-      code: 200,
-      message:
-        deleted.length > 0
-          ? `${deleted.length} expired internship(s) deleted`
-          : "No expired internships found",
-      data: deleted,
-    };
-  } catch (error) {
-    console.error("delete_expired_internships error:", error);
-    return {
-      success: false,
-      code: 500,
-      message: "Failed to delete expired internships",
       error: String(error),
     };
   }

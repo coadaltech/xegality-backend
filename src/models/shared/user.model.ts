@@ -12,6 +12,7 @@ const user_model = pgTable("users", {
   hashed_password: text(),
   refresh_token: text().notNull(),
   created_at: timestamp().defaultNow(),
+  // last_online: timestamp().defaultNow(),
 });
 
 type UserType = InferSelectModel<typeof user_model>;

@@ -1,6 +1,9 @@
+
 const ROLE_CONST = ["consumer", "lawyer", "student", "paralegal", "ca", "admin"] as const;
 const GENDER_CONST = ["male", "female"] as const;
 const MARITAL_STATUS_CONST = ["single", "married", "divorced", "widowed", "separated"] as const;
+const APPOINTMENT_STATUS_CONST = ["scheduled", "completed", "canceled", "no_show"] as const;
+const PAYMENT_STATUS_CONST = ["pending", "completed", "failed", "refunded"] as const;
 
 const LAWYER_FEE_CONST = [
   "fixed",
@@ -71,12 +74,34 @@ const PRACTICE_AREAS_CONST = [
   "contract"
 ] as const;
 
-
 type RoleType = typeof ROLE_CONST[number];
 type GenderType = typeof GENDER_CONST[number];
 type MaritalStatusType = typeof MARITAL_STATUS_CONST[number];
 type LanguagesType = typeof LANGUAGES_CONST[number];
 type LawyerFeeType = typeof LAWYER_FEE_CONST[number];
 type PracticeAreasType = typeof PRACTICE_AREAS_CONST[number];
+type AppointmentStatusType = typeof APPOINTMENT_STATUS_CONST[number];
+type PaymentStatusType = typeof PAYMENT_STATUS_CONST[number];
 
-export { ROLE_CONST, RoleType, GENDER_CONST, GenderType, MARITAL_STATUS_CONST, MaritalStatusType, LAWYER_FEE_CONST, LawyerFeeType, LANGUAGES_CONST, LanguagesType, PRACTICE_AREAS_CONST, PracticeAreasType };
+
+export {
+  ROLE_CONST,
+  GENDER_CONST,
+  MARITAL_STATUS_CONST,
+  LAWYER_FEE_CONST,
+  LANGUAGES_CONST,
+  PRACTICE_AREAS_CONST,
+  APPOINTMENT_STATUS_CONST,
+  PAYMENT_STATUS_CONST,
+}
+
+export type {
+  RoleType,
+  GenderType,
+  MaritalStatusType,
+  LawyerFeeType,
+  LanguagesType,
+  PracticeAreasType,
+  AppointmentStatusType,
+  PaymentStatusType
+}

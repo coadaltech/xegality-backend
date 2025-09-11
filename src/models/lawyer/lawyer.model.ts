@@ -11,6 +11,7 @@ const lawyer_profile_model = pgTable("lawyers", {
   bio: text().notNull(),
   bar_number: varchar({ length: 20 }).notNull(),
   practice_areas: varchar({ enum: PRACTICE_AREAS_CONST }).array().notNull(),
+  // law_firm: varchar({ length: 50 }),
   practice_location: varchar({ length: 50 }).notNull(),
   practicing_courts: varchar({ length: 50 }).array(),
   home_address: text(),
@@ -29,6 +30,7 @@ const lawyer_profile_model = pgTable("lawyers", {
 
   // linkedin_url: text(),
   // awards: jsonb(),
+
   // reviews: jsonb(),
 });
 

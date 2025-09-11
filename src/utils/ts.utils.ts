@@ -13,5 +13,9 @@ function undefinedToNull<T>(value: T): T extends undefined ? null : T {
   return value as any;
 }
 
-export { undefinedToNull };
+type RequiredByKeys<T, K extends keyof T> =
+  Omit<T, K> & { [P in K]-?: T[P] };
 
+
+export { undefinedToNull };
+export type { RequiredByKeys };

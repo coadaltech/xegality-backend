@@ -1,17 +1,30 @@
 ### ------ WEB SOCKETS ------ ###
 
-WS ws://localhost:4001/chat?to=user_175018770338311cz&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MjM5OTUxMTNiNDMiLCJyb2xlIjoiY29uc3VtZXIiLCJpYXQiOjE3NTAzMzk2NjEsImV4cCI6MTc1MDM0MzI2MX0.Qnt5McrhRMtL6PMSorfjR6CnUS5dJ-ukMh5MqDrW58k
+WEBSOCKET ws://localhost:4001/chat?to=399257256345&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Mzk5MjU3MjU2MzQ1LCJyb2xlIjoiY29uc3VtZXIiLCJpc19wcm9maWxlX2NvbXBsZXRlIjp0cnVlLCJpYXQiOjE3NTcxNDE3ODMsImV4cCI6MTc1NzIyODE4M30.1epzDaefDqPmy9nfmeRmrrMdwDlsu5LoiZ_q-imENwk 
+Cookie: sessionId=abc123
 
-{ "from" : "user_23323", "to" : "user_99999", "content" : "hi from consumer meant for lawyer" }
-
-###
-WS ws://localhost:4001/chat?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MjExNzUzNTlobjIiLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUwMzM5NDU4LCJleHAiOjE3NTAzNDMwNTh9.jpWxcuZ1ja-clPLR_eQItIeYUHX9J42pAk5v27nccdk
-
-{ "from" : "user_23323", "to" : "user_99999", "content" : "hi from lawyer" }
-
-###
-WS ws://localhost:4001/chat?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MTA3NTgzOGx0NW8iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDMzOTY4NSwiZXhwIjoxNzUwMzQzMjg1fQ.SsSgUKaqXW9FVp2drBuJAmqFbpYWaXR62qeePDpnkzw
-
-{ "from" : "user_23323", "to" : "user_99999", "content" : "hi from lawyer" }
+{
+  "message": "hi from consumer meant for lawyer"
+}
 
 
+### 
+
+GET WS ws://localhost:4001/chat?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MjExNzUzNTlobjIiLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzUwMzM5NDU4LCJleHAiOjE3NTAzNDMwNTh9.jpWxcuZ1ja-clPLR_eQItIeYUHX9J42pAk5v27nccdk HTTP/1.1
+
+{
+  "content": "hi from lawyer",
+  "from": "user_23323",
+  "to": "user_99999"
+}
+
+
+### 
+
+GET WS ws://localhost:4001/chat?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfMTc1MDE2MTA3NTgzOGx0NW8iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MDMzOTY4NSwiZXhwIjoxNzUwMzQzMjg1fQ.SsSgUKaqXW9FVp2drBuJAmqFbpYWaXR62qeePDpnkzw HTTP/1.1
+
+{
+  "content": "hi from lawyer",
+  "from": "user_23323",
+  "to": "user_99999"
+}

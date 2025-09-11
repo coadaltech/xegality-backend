@@ -141,7 +141,8 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     }
     const data = await create_tokens(
       validation_response.data?.id!,
-      validation_response.data?.role!
+      validation_response.data?.role!,
+      validation_response.data?.is_profile_complete!
     );
     if (!data?.success) {
       set.status = data?.code;
@@ -356,6 +357,6 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       success: true,
       message: "Logged Out Successfully",
     };
-  });
+  })
 
 export default auth_routes;

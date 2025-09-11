@@ -11,9 +11,7 @@ import { store_massage } from './chat.service';
 const private_channels: string[] = []
 
 const fetch_info = (token: string, receiver_id: number) => {
-
   const auth_result = authenticate_jwt(token);
-
   if (!auth_result.success) {
     console.log(`[WEBSOCKET] -> Authentication failed: ${auth_result.message}`);
 
@@ -39,21 +37,28 @@ const web_socket = new Elysia()
   .ws('/chat', {
     // on connection request
     open: (ws) => {
-      const token = new URL(ws.data.request.url).searchParams.get('token')
+
+      const sender_id = new URL(ws.data.request.url).searchParams.get('from')
+      const role = new URL(ws.data.request.url).searchParams.get('role')
+      // const token = new URL(ws.data.request.url).searchParams.get('token')
       const receiver_id = Number(new URL(ws.data.request.url).searchParams.get('to'))
 
-      if (!token || !receiver_id) {
-        ws.close(1008, 'Missing token or receiver');
+      if (!sender_id || !role || !receiver_id) {
+        // ws.close(1008, 'Missing token or receiver');
+        ws.close(1008, 'Missing from (id) or role or receiver');
         return;
       }
 
-      const fetch_info_results = fetch_info(token, receiver_id);
-      if (!fetch_info_results.success) {
-        ws.close(fetch_info_results.code, fetch_info_results.message);
-        return;
-      }
+      // const fetch_info_results = fetch_info(token, receiver_id);
+      // if (!fetch_info_results.success) {
+      //   ws.close(fetch_info_results.code, fetch_info_results.message);
+      //   return;
+      // }
 
-      const { user_id, user_role } = fetch_info_results;
+      // const { user_id, user_role } = fetch_info_results;
+      const user_id = Number(sender_id)
+      const user_role = role
+
       const channel = `${user_id}:${receiver_id}`;
       const channel_r = `${receiver_id}:${user_id}`;
 
@@ -78,23 +83,32 @@ const web_socket = new Elysia()
 
     // on message received
     message: async (ws, message) => {
-      const token = new URL(ws.data.request.url).searchParams.get('token')
+      console.log("message ->", message)
+
+      const sender_id = new URL(ws.data.request.url).searchParams.get('from')
+      const role = new URL(ws.data.request.url).searchParams.get('role')
+      // const token = new URL(ws.data.request.url).searchParams.get('token')
       const receiver_id = Number(new URL(ws.data.request.url).searchParams.get('to'))
 
-      if (!token || !receiver_id) {
-        ws.close(1008, 'Missing token or receiver');
+      if (!sender_id || !role || !receiver_id) {
+        // ws.close(1008, 'Missing token or receiver');
+        ws.close(1008, 'Missing from (id) or role or receiver');
         return;
       }
 
-      const fetch_info_results = fetch_info(token, receiver_id);
-      if (!fetch_info_results.success) {
-        ws.close(fetch_info_results.code, fetch_info_results.message);
-        return;
-      }
+      // const fetch_info_results = fetch_info(token, receiver_id);
+      // if (!fetch_info_results.success) {
+      //   ws.close(fetch_info_results.code, fetch_info_results.message);
+      //   return;
+      // }
 
-      console.log("you don't have to do this string:string bullshit IG, just store ws for a randomly generated id and use that to send messages (just like in cricstock)");
 
-      const { user_id, user_role } = fetch_info_results;
+      // TODO:
+      // console.log("you don't have to do this string:string bullshit IG, just store ws (object) for a randomly generated id and use that to send messages (just like in cricstock)");
+      // const { user_id, user_role } = fetch_info_results;
+      const user_id = Number(sender_id)
+      const user_role = role
+
       const channel = `${user_id}:${receiver_id}`;
       const channel_r = `${receiver_id}:${user_id}`;
 
@@ -119,21 +133,28 @@ const web_socket = new Elysia()
 
     // on close connection
     close: (ws, error, message) => {
-      const token = new URL(ws.data.request.url).searchParams.get('token')
+
+      const sender_id = new URL(ws.data.request.url).searchParams.get('from')
+      const role = new URL(ws.data.request.url).searchParams.get('role')
+      // const token = new URL(ws.data.request.url).searchParams.get('token')
       const receiver_id = Number(new URL(ws.data.request.url).searchParams.get('to'))
 
-      if (!token || !receiver_id) {
-        ws.close(1008, 'Missing token or receiver');
+      if (!sender_id || !role || !receiver_id) {
+        // ws.close(1008, 'Missing token or receiver');
+        ws.close(1008, 'Missing from (id) or role or receiver');
         return;
       }
 
-      const fetch_info_results = fetch_info(token, receiver_id);
-      if (!fetch_info_results.success) {
-        ws.close(fetch_info_results.code, fetch_info_results.message);
-        return;
-      }
+      // const fetch_info_results = fetch_info(token, receiver_id);
+      // if (!fetch_info_results.success) {
+      //   ws.close(fetch_info_results.code, fetch_info_results.message);
+      //   return;
+      // }
 
-      const { user_id, user_role } = fetch_info_results;
+      // const { user_id, user_role } = fetch_info_results;
+      const user_id = Number(sender_id)
+      const user_role = role
+
       const channel = `${user_id}:${receiver_id}`;
       const channel_r = `${receiver_id}:${user_id}`;
 
@@ -153,10 +174,11 @@ const web_socket = new Elysia()
 
     // body: t.String()
     body: t.Object({
-      message: t.String()
+      message: t.String(),
     }),
   })
   .listen(4001)
+
 console.log(`[WEBSOCKET] -> http://localhost:${web_socket.server?.port}`);
 
 export default web_socket;

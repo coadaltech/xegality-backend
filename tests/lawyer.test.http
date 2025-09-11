@@ -11,7 +11,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NjczNzkzNDA5N
 
 ### 
 
-POST http://localhost:4000/api/lawyer/dashboard/add-case HTTP/1.1
+POST http://localhost:4000/api/lawyer/dashboard/create-case HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzgwMzE3MDYxNzExLCJyb2xlIjoibGF3eWVyIiwiaWF0IjoxNzU0NTU1MjEyLCJleHAiOjE3NTQ2NDE2MTJ9.HPoapkYafUt8z7LhARn46UDf3Hdng8P_byUgKTgTjx8
 

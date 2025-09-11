@@ -14,7 +14,8 @@ const create_connection = async (from: number, to: number) => {
 
     // Check if the connection already exists
     const exists = await get_connected_lawyers(from)
-    if (exists.data && exists.data.includes(to)) {
+    // check if data exists and if id is in the object of data array
+    if (exists.data && exists.data.some((connection) => connection.id === to)) {
       return {
         success: false,
         code: 409,

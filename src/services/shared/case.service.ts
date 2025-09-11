@@ -1,9 +1,8 @@
 import { eq } from "drizzle-orm";
 import db from "../../config/db";
 import { case_model, } from "../../models/shared/case.model";
-import { PostCaseType } from "../../types/case.types";
 import { RoleType } from "../../types/user.types";
-import { format_time_spent } from "@/utils/general.utils";
+import { format_time_spent, format_days_since_date } from "@/utils/general.utils";
 
 const get_cases_list = async (id: number, role: RoleType) => {
   try {
@@ -11,9 +10,9 @@ const get_cases_list = async (id: number, role: RoleType) => {
     const db_result =
       await db
         .select({
+          case_id: case_model.id,
           type: case_model.type,
           title: case_model.title,
-          case_id: case_model.id,
           lawyer: case_model.assigned_to,
           status: case_model.status,
         })
@@ -55,7 +54,7 @@ const get_case_details = async (case_id: string) => {
       };
     }
 
-    const time_spent = format_time_spent(new Date().getTime() - db_results[0].open_date.getTime());
+    const time_spent = format_days_since_date(db_results[0].open_date);
     const total_documents = db_results[0].consumer_documents?.length;
     const total_activities = db_results[0].timeline?.length;
 
@@ -71,6 +70,7 @@ const get_case_details = async (case_id: string) => {
         assigned_to: db_results[0].assigned_to,
         assigned_by: db_results[0].assigned_by,
         status: db_results[0].status,
+        priority: db_results[0].priority,
         open_date: db_results[0].open_date,
         time_spent,
         consumer_id: db_results[0].consumer_id,

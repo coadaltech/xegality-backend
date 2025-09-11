@@ -3,6 +3,8 @@ import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
 import { RoleType } from "../../types/user.types";
 import { create_unique_id, generate_jwt, generate_refresh_jwt, hash_password } from "@/utils/general.utils";
+import { consumer_profile_model } from "@/models/consumer/consumer.model";
+// import { get_profile_model_for_role } from "@/utils/db.utils";
 
 export const find_user_by_id = async (id: number) => {
   try {
@@ -148,3 +150,46 @@ export const create_user = async (
     }
   }
 };
+
+export const get_user_details = async (id: number, role: RoleType) => {
+  try {
+    const db_result = await db
+      .select({
+        id: user_model.id,
+        role: user_model.role,
+        name: user_model.name,
+        phone: user_model.phone,
+        email: user_model.email,
+        is_profile_complete: user_model.is_profile_complete,
+      })
+      .from(user_model)
+      .where(eq(user_model.id, id))
+      .limit(1);
+
+    if (db_result.length === 0) {
+      return {
+        success: false,
+        code: 404,
+        message: "User not found",
+      };
+    }
+
+    return {
+      success: true,
+      code: 200,
+      message: "User details fetched successfully",
+      data: db_result[0],
+    };
+
+  }
+
+  catch (error) {
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR get_user_details",
+    }
+  }
+}
+
+

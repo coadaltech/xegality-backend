@@ -8,181 +8,71 @@ import {
 import {
   apply_internship,
   create_internship,
-  delete_expired_internships,
   get_applied_internships,
   get_internships,
   search_internships,
 } from "../../services/shared/internship.service";
 import { create_unique_id } from "@/utils/general.utils";
 
-const internship_routes = new Elysia({ prefix: "/internship" })
+const internship_routes = new Elysia({ prefix: "/student/dashboard" })
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
-      const state = app_middleware({ cookie, headers });
+      const state_result = app_middleware({ cookie, headers, allowed: ["student", "lawyer"] });
 
-      if (!state.data) {
-        set.status = state.code;
-        return {
-          success: state.success,
-          code: state.code,
-          message: state.message,
-        };
-      }
-      if (state.data.role === "consumer") {
-        set.status = 409;
-        return {
-          success: false,
-          code: 409,
-          message: "Restricted Endpoints",
-        };
-      }
+      set.status = state_result.code;
+      if (!state_result.data) return state_result
 
-      store.id = state.data.id;
-      store.role = state.data.role;
-    },
+      store.id = state_result.data.id;
+      store.role = state_result.data.role;
+    }
   })
-  .get("/all", async ({ set, store }) => {
+
+  .get("/fetch-all-internships", async ({ set, store }) => {
     const internships_response = await get_internships(store.id, store.role);
 
     set.status = internships_response.code;
-    return {
-      success: internships_response.success,
-      code: internships_response.code,
-      message: internships_response.message,
-      data: internships_response?.data,
-    };
+    return internships_response;
   })
-  .get("/applied", async ({ set, store }) => {
-    if (store.role === "lawyer" || store.role === "paralegal") {
-      set.status = 409;
-      return {
-        success: false,
-        code: 409,
-        message: "Restricted Endpoints",
-      };
-    }
+
+  .get("/fetch-applied-internships", async ({ set, store }) => {
     const internships_response = await get_applied_internships(store.id);
 
     set.status = internships_response.code;
-    return {
-      success: internships_response.success,
-      code: internships_response.code,
-      message: internships_response.message,
-      data: internships_response?.data,
-    };
+    return internships_response
   })
+
   .post(
-    "/search",
+    "/search-internship",
     async ({ set, store, body }) => {
-      if (store.role === "lawyer" || store.role === "paralegal") {
-        set.status = 409;
-        return {
-          success: false,
-          code: 409,
-          message: "Restricted Endpoints",
-        };
-      }
+
       const { query } = body;
       const internships_response = await search_internships(query);
 
       set.status = internships_response.code;
-      return {
-        success: internships_response.success,
-        code: internships_response.code,
-        message: internships_response.message,
-        data: internships_response?.data,
-      };
+      return internships_response;
     },
     {
       body: SearchInternshipSchema,
     }
   )
-  .post(
-    "/add",
-    async ({ set, store, body }) => {
-      if (store.role === "student") {
-        set.status = 409;
-        return {
-          success: false,
-          code: 409,
-          message: "Restricted Endpoints",
-        };
-      }
-      const internship_id = create_unique_id();
 
-      const data = {
-        id: internship_id,
-        title: body.title,
-        description: body.description,
-        location: body.location,
-        specialization: body.specialization,
-        designation: body.designation,
-        duration: body.duration,
-        application_deadline: new Date(body.application_deadline),
-        posted_by: Number(store.id),
-        compensation_type: body.compensation_type,
-        salary_amount: body.salary_amount,
-        requirements: body.requirements,
-        benefits: body.benefits,
-      };
-      const post_internship_response = await create_internship(data);
-      set.status = post_internship_response.code;
-      return {
-        success: post_internship_response.success,
-        code: post_internship_response.code,
-        message: post_internship_response.message,
-        data: post_internship_response?.data,
-      };
-    },
-    {
-      body: PostInternshipSchema,
-    }
-  )
   .post(
-    "/apply",
+    "/apply-internship",
     async ({ set, store, body }) => {
-      if (store.role === "lawyer" || store.role === "paralegal") {
-        set.status = 409;
-        return {
-          success: false,
-          code: 409,
-          message: "Restricted Endpoints",
-        };
-      }
+
       const { internship_id } = body;
       const apply_internship_response = await apply_internship(
         internship_id,
         store.id
       );
+
       set.status = apply_internship_response.code;
-      return {
-        success: apply_internship_response.success,
-        code: apply_internship_response.code,
-        message: apply_internship_response.message,
-      };
+      return apply_internship_response;
     },
     { body: ApplyInternshipSchema }
   )
-  .get("/expired", async ({ set, store }) => {
-    if (store.role === "student") {
-      set.status = 409;
-      return {
-        success: false,
-        code: 409,
-        message: "Restricted Endpoints",
-      };
-    }
-    const internships_response = await delete_expired_internships();
 
-    set.status = internships_response.code;
-    return {
-      success: internships_response.success,
-      code: internships_response.code,
-      message: internships_response.message,
-      data: internships_response?.data,
-    };
-  });
 
 export default internship_routes;
 

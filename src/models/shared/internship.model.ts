@@ -1,11 +1,14 @@
-import { bigint, PgEnum, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, date, PgEnum, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { user_model } from "./user.model";
 
 export const applied_internship_model = pgTable("applied_internships", {
   internship_id: bigint({ mode: "number" }).primaryKey().notNull().references(() => internship_model.id),
   student_id: bigint({ mode: "number" }).notNull().references(() => user_model.id),
   applied_at: timestamp({ withTimezone: true }).defaultNow(),
-  status: text().default("applied"),
+  status: text().default("applied"), // applied, reviewed, interviewed, selected, rejected
+  notes: text(),
+  interview_scheduled: timestamp({ withTimezone: true }),
+  interview_notes: text(),
 });
 
 export const internship_model = pgTable("internships", {
@@ -22,6 +25,6 @@ export const internship_model = pgTable("internships", {
   requirements: text().array(),
   benefits: text().array(),
   posted_by: bigint({ mode: "number" }).notNull().references(() => user_model.id),
-  posted_date: timestamp({ withTimezone: true }).defaultNow(),
+  posted_date: date().defaultNow(),
   // tags: pgEnum("tags", TAGENUM)().array()
 });

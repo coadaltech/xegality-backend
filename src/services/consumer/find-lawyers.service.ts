@@ -7,7 +7,7 @@ import { eq, or, and, arrayContains, gt, gte, lte, ilike, sql, getTableColumns }
 const userColumns = getTableColumns(user_model);
 const lawyerColumns = getTableColumns(lawyer_profile_model);
 // destructure to drop unwanted ones
-const { id: userId, role, created_at, refresh_token, hashed_password, ...safeUserColumns } = userColumns;
+const { role, created_at, refresh_token, hashed_password, ...safeUserColumns } = userColumns;
 const { id: lawyerId, ...safeLawyerColumns } = lawyerColumns;
 
 const get_random_lawyers = async (limit: number = 10) => {

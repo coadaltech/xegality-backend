@@ -73,6 +73,15 @@ const format_time_spent = (milliseconds: number) => {
   return `${days} days ${hours} hours`;
 }
 
+const format_days_since_date = (dateString: string) => {
+  const openDate = new Date(dateString);
+  const currentDate = new Date();
+  const timeDifference = currentDate.getTime() - openDate.getTime();
+  const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+  
+  return `${days} days`;
+}
+
 const generate_application_id = () => {
   const firstTwoChars = "CA"
   const currentYear = new Date().getFullYear();
@@ -94,6 +103,7 @@ export {
   verify_access_token,
   create_unique_id,
   format_time_spent,
+  format_days_since_date,
   generate_case_id,
   generate_application_id
 };

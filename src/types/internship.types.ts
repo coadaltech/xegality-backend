@@ -16,7 +16,6 @@ export const PostInternshipSchema = t.Object({
   application_deadline: t.String(),
   requirements: t.Array(t.String()),
   benefits: t.Array(t.String()),
-  posted_date: t.String(),
 });
 
 export const PostInternSchema = t.Object({

@@ -87,6 +87,7 @@ const handle_login = async (password: string, value: number | string) => {
     };
   }
 };
+
 const create_tokens = async (id: number, role: string, is_profile_complete: boolean) => {
   try {
     const new_access_token = generate_jwt(id, role, is_profile_complete);
@@ -109,6 +110,7 @@ const create_tokens = async (id: number, role: string, is_profile_complete: bool
     };
   }
 };
+
 const verify_token_with_db = async (refresh_token: string) => {
   try {
     const data = verify_refresh_token(refresh_token);
@@ -138,7 +140,10 @@ const verify_token_with_db = async (refresh_token: string) => {
 
     const token_exists = (
       await db
-        .select({ refresh_token: user_model.refresh_token })
+        .select({
+          refresh_token: user_model.refresh_token,
+          is_profile_complete: user_model.is_profile_complete
+        })
         .from(user_model)
         .where(eq(user_model.id, res.id))
     )[0];
@@ -157,6 +162,7 @@ const verify_token_with_db = async (refresh_token: string) => {
       data: {
         id: data.payload.id,
         role: data.payload.role,
+        is_profile_complete: token_exists.is_profile_complete || false
       },
     };
   } catch (error) {
@@ -167,6 +173,7 @@ const verify_token_with_db = async (refresh_token: string) => {
     };
   }
 };
+
 const handle_google_callback = async ({ query, set }: any) => {
   try {
     if (!query.code || typeof query.code !== "string") {

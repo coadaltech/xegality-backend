@@ -1,15 +1,25 @@
 import db from "@/config/db";
-import { application_model } from "@/models/ca/applications.model";
+import { application_model, ApplicationType, ApplicationTypeWithOptionalConsumer, InsertApplicationType, UpdateApplicationType } from "@/models/ca/applications.model";
 import { eq } from "drizzle-orm";
-import { ApplicationType } from "@/types/ca.types";
 import { generate_application_id } from "@/utils/general.utils";
 import { find_application_by_id } from "./core.service";
 import { create_user } from "../shared/user.service";
+import { RoleType } from "@/types/user.types";
 
-const get_applications = async (ca_id: number) => {
+const get_applications_list = async (id: number, role: RoleType) => {
   try {
-    const applications = await db.select().from(application_model).where(eq(application_model.handled_by, ca_id));
-    if (applications.length === 0) {
+    const db_result = await db
+      .select({
+        id: application_model.id,
+        title: application_model.title,
+        category: application_model.category,
+        ca_name: application_model.ca_name,
+        status: application_model.status,
+      })
+      .from(application_model)
+      .where(eq(role === "ca" ? application_model.handled_by : application_model.consumer_id, id))
+
+    if (db_result.length === 0) {
       return {
         success: false,
         code: 404,
@@ -19,8 +29,8 @@ const get_applications = async (ca_id: number) => {
     return {
       success: true,
       code: 200,
-      message: `Total ${applications.length} applications Found`,
-      data: applications,
+      message: `Total ${db_result.length} applications Found`,
+      data: db_result,
     };
   } catch (error) {
     return {
@@ -32,7 +42,7 @@ const get_applications = async (ca_id: number) => {
   }
 }
 
-const create_new_application = async (body: ApplicationType, handled_by: number) => {
+const create_new_application = async (body: InsertApplicationType, handled_by: number) => {
   try {
     let application_id;
     do { application_id = generate_application_id() } while ((await find_application_by_id(application_id)).success);
@@ -62,6 +72,7 @@ const create_new_application = async (body: ApplicationType, handled_by: number)
         status: body.status,
         open_date: body.open_date,
         handled_by: handled_by,
+        ca_name: body.ca_name,
         consumer_id: body.consumer_id,
         consumer_name: body.consumer_name,
         consumer_phone: body.consumer_phone,
@@ -100,5 +111,49 @@ const create_new_application = async (body: ApplicationType, handled_by: number)
 };
 
 
-export { get_applications, create_new_application }
+const update_application = async (body: UpdateApplicationType) => {
+  try {
+    if (!body.id) {
+      return {
+        success: false,
+        code: 400,
+        message: "ERROR update_application -> Missing application ID",
+      };
+    }
+
+    // Check if the application exists
+    const existing_application = await find_application_by_id(body.id);
+    if (!existing_application.success) {
+      return {
+        success: false,
+        code: 404,
+        message: "Application not found",
+      };
+    }
+
+    // Update the application
+    const result = await db
+      .update(application_model)
+      .set(body)
+      .where(eq(application_model.id, body.id))
+      .returning();
+
+    return {
+      success: true,
+      code: 200,
+      message: "Application successfully updated",
+      data: result[0],
+    };
+  } catch (error: any) {
+    console.error("Error updating application:", error);
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR update_application -> Internal server error",
+      error: error?.message || String(error),
+    };
+  }
+}
+
+export { get_applications_list, create_new_application, update_application }
 
