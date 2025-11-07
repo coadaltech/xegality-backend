@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { otp_cycle, verify_token_with_db, create_tokens, handle_login_by_token, handle_login, handle_google_callback } from "../../services/shared/auth.service";
 import { get_consent_url } from "../../services/shared/google.service";
 import { verify_otp } from "../../services/shared/otp.service";
@@ -8,38 +8,36 @@ import { verify_access_token } from "@/utils/general.utils";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
   // SIGNUP
-  .post(
-    "/generate-otp",
-    async ({ body, set }) => {
-      const { phone, email } = body;
-      if (!phone && !email) {
-        set.status = 400;
-        console.log(`[SERVER]   Phone or Email Missing : ${new Date().toLocaleString()}`);
-        return {
-          success: false,
-          code: 404,
-          message: "Either phone or email must be provided.",
-        };
-      }
+  .post("/generate-otp", async ({ body, set }) => {
+    const { phone, email } = body;
+    if (!phone && !email) {
+      set.status = 400;
+      console.log(`[SERVER]   Phone or Email Missing : ${new Date().toLocaleString()}`);
+      return {
+        success: false,
+        code: 404,
+        message: "Either phone or email must be provided.",
+      };
+    }
 
-      const value = phone ?? email;
-      if (!value) {
-        console.log(
-          `[SERVER]   Invalid Phone or Email : ${new Date().toLocaleString()}`
-        );
-        return {
-          success: false,
-          message: "Value is neither Phone nor Email",
-        };
-      }
-      const otp_response = await otp_cycle(value);
-      console.log(otp_response);
-      if (otp_response.code == 200 && otp_response.success) {
-        set.status = otp_response.code;
-        console.log(`[SERVER]   OTP Send : ${new Date().toLocaleString()}`);
-        return otp_response;
-      }
-    },
+    const value = phone ?? email;
+    if (!value) {
+      console.log(
+        `[SERVER]   Invalid Phone or Email : ${new Date().toLocaleString()}`
+      );
+      return {
+        success: false,
+        message: "Value is neither Phone nor Email",
+      };
+    }
+    const otp_response = await otp_cycle(value);
+    console.log(otp_response);
+    if (otp_response.code == 200 && otp_response.success) {
+      set.status = otp_response.code;
+      console.log(`[SERVER]   OTP Send : ${new Date().toLocaleString()}`);
+      return otp_response;
+    }
+  },
     { body: GenerateOtpSchema }
   )
 
@@ -254,6 +252,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     },
     { body: LoginSchema }
   )
+
   .post(
     "/verify-login-otp",
     async ({ body, set }) => {
@@ -358,5 +357,27 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       message: "Logged Out Successfully",
     };
   })
+
+  .post("/test-upload", async ({ body }) => {
+    console.log(body.name)
+    // console.log(body.variants)
+    console.log(body.image.type)
+    console.log(body.image.size)
+
+  },
+    {
+      body: t.Object({
+        name: t.String(),
+        // t.String() become t.ArrayString()
+        // variants: t.ArrayString(
+        //   t.Object({
+        //     price: t.Number({ minimum: 0 }),
+        //     weight: t.Number({ minimum: 0 }),
+        //   }),
+        // ),
+        image: t.File({ type: "image" }),
+      }),
+    },
+  )
 
 export default auth_routes;

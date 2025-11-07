@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, pgEnum, bigint, char, varchar, boolean, } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, pgEnum, bigint, char, varchar, boolean, integer, } from "drizzle-orm/pg-core";
 import { ROLE_CONST } from "../../types/user.types";
 import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
@@ -9,6 +9,7 @@ const user_model = pgTable("users", {
   phone: bigint({ mode: "number" }).unique(),
   email: varchar({ length: 80 }).unique(),
   is_profile_complete: boolean().default(false),
+  credits: integer().default(0),
   hashed_password: text(),
   refresh_token: text().notNull(),
   created_at: timestamp().defaultNow(),

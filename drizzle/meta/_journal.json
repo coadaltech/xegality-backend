@@ -134,6 +134,13 @@
       "when": 1757502253355,
       "tag": "0018_normal_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1761388158698,
+      "tag": "0019_pretty_argent",
+      "breakpoints": true
     }
   ]
 }

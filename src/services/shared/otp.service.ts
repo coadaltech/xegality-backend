@@ -46,6 +46,7 @@ const verify_otp = async (otp: number, value: string | number) => {
     return { success: false, code: 500, message: "ERROR : verify_otp" };
   }
 };
+
 const find_otp_by_phone = async (phone: number) => {
   try {
     const exisiting_otp = (
@@ -68,6 +69,7 @@ const find_otp_by_phone = async (phone: number) => {
     return { success: false, code: 500, message: "ERROR : find_otp_by_otp" };
   }
 };
+
 const find_otp_by_email = async (email: string) => {
   try {
     const exisiting_otp = (

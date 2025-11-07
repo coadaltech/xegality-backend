@@ -17,6 +17,8 @@ import lawyer_internship_routes from "./routes/lawyer/internship.routes";
 import appointment_routes from "./routes/lawyer/appointments.routes";
 import internship_applications_routes from "./routes/lawyer/internship-applications.routes";
 import role_management_routes from "./routes/lawyer/role-management.routes";
+import research_routes from "./routes/shared/research.routes";
+import payment_routes from "./routes/shared/payment.routes";
 
 const SERVER_PORT = process.env.SERVER_PORT;
 if (!SERVER_PORT) {
@@ -38,6 +40,8 @@ const app = new Elysia({ prefix: "/api" })
   .use(appointment_routes)
   .use(internship_applications_routes)
   .use(role_management_routes)
+  .use(research_routes)
+  .use(payment_routes)
   .use(case_routes)
   .use(chat_routes)
   .use(web_socket)
