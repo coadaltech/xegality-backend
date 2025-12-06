@@ -6,18 +6,24 @@ import {
   schedule_interview,
 } from "../../services/lawyer/internship-applications.service";
 
-const internship_applications_routes = new Elysia({ prefix: "/lawyer/dashboard" })
+const internship_applications_routes = new Elysia({
+  prefix: "/lawyer/dashboard",
+})
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
-      const state_result = app_middleware({ cookie, headers, allowed: ["lawyer"] });
+      const state_result = app_middleware({
+        cookie,
+        headers,
+        allowed: ["lawyer"],
+      });
 
       set.status = state_result.code;
       if (!state_result.data) return state_result;
 
       store.id = state_result.data.id;
       store.role = state_result.data.role;
-    }
+    },
   })
 
   .get("/fetch-internship-applications", async ({ set, store }) => {

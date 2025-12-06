@@ -8,7 +8,7 @@ import {
   PaymentVerificationSchema,
   RazorpayOrderResponse,
   PaymentVerificationResult,
-  PaymentRecord
+  PaymentRecord,
 } from "../../types/shared/payment.types";
 import { create_unique_id } from "../../utils/general.utils";
 
@@ -22,7 +22,6 @@ const razorpay = new Razorpay({
 });
 
 export class PaymentService {
-
   static async createOrder(
     userId: number,
     orderData: typeof CreateOrderSchema.static
@@ -42,6 +41,8 @@ export class PaymentService {
         notes: orderData.notes,
         partial_payment: orderData.partial_payment,
       });
+
+      console.log("razorpay order", razorpayOrder);
 
       // Store payment record in database
       const paymentId = create_unique_id();
@@ -83,7 +84,8 @@ export class PaymentService {
     verificationData: typeof PaymentVerificationSchema.static
   ): Promise<PaymentVerificationResult> {
     try {
-      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = verificationData;
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+        verificationData;
 
       // Create signature
       const body = razorpay_order_id + "|" + razorpay_payment_id;

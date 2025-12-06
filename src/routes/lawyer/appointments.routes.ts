@@ -27,6 +27,8 @@ const appointment_routes = new Elysia({ prefix: "/lawyer/dashboard" })
       const data = {
         ...body,
         lawyer_id: Number(store.id),
+        appointment_datetime: new Date(body.appointment_datetime),
+        status: body.status?.[0] || "scheduled",
       };
 
       const response = await create_appointment(data as any);
@@ -56,10 +58,16 @@ const appointment_routes = new Elysia({ prefix: "/lawyer/dashboard" })
   .put(
     "/update-appointment/:id",
     async ({ set, store, params, body }) => {
+      const updateData = {
+        ...body,
+        ...(body.appointment_datetime && { appointment_datetime: new Date(body.appointment_datetime) }),
+        ...(body.status && { status: body.status[0] || "scheduled" }),
+      };
+
       const response = await update_appointment(
         Number(params.id),
         Number(store.id),
-        body as any
+        updateData as any
       );
 
       set.status = response.code;

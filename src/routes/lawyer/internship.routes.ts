@@ -1,13 +1,11 @@
 import { Elysia, t } from "elysia";
-import { app_middleware, authenticate_jwt } from "../../middlewares";
-import {
-  ApplyInternshipSchema,
-  PostInternshipSchema,
-  SearchInternshipSchema,
-} from "../../types/internship.types";
+import { app_middleware } from "../../middlewares";
+import { PostInternshipSchema } from "../../types/internship.types";
 import {
   create_internship,
   get_internships,
+  update_internship,
+  delete_internship,
 } from "../../services/shared/internship.service";
 import { create_unique_id } from "@/utils/general.utils";
 
@@ -15,20 +13,23 @@ const lawyer_internship_routes = new Elysia({ prefix: "/lawyer/dashboard" })
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
-      const state_result = app_middleware({ cookie, headers, allowed: ["student", "lawyer"] });
+      const state_result = app_middleware({
+        cookie,
+        headers,
+        allowed: ["student", "lawyer"],
+      });
 
       set.status = state_result.code;
-      if (!state_result.data) return state_result
+      if (!state_result.data) return state_result;
 
       store.id = state_result.data.id;
       store.role = state_result.data.role;
-    }
+    },
   })
 
   .post(
     "/create-internship",
     async ({ set, store, body }) => {
-
       const internship_id = create_unique_id();
 
       const data = {
@@ -63,5 +64,43 @@ const lawyer_internship_routes = new Elysia({ prefix: "/lawyer/dashboard" })
     set.status = internships_response.code;
     return internships_response;
   })
+
+  .put(
+    "/update-internship/:id",
+    async ({ set, store, params, body }) => {
+      const response = await update_internship(
+        Number(params.id),
+        Number(store.id),
+        body
+      );
+
+      set.status = response.code;
+      return response;
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      body: t.Partial(PostInternshipSchema),
+    }
+  )
+
+  .delete(
+    "/delete-internship/:id",
+    async ({ set, store, params }) => {
+      const response = await delete_internship(
+        Number(params.id),
+        Number(store.id)
+      );
+
+      set.status = response.code;
+      return response;
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+    }
+  );
 
 export default lawyer_internship_routes;

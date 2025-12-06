@@ -117,18 +117,10 @@ const get_invoices_list = async (id: number, role: RoleType) => {
         ))
       .orderBy(desc(lawyer_invoice_model.date_issued));
 
-    if (db_result.length === 0) {
-      return {
-        success: false,
-        code: 404,
-        message: "No invoices found",
-      };
-    }
-
     return {
       success: true,
       code: 200,
-      message: `Total ${db_result.length} invoices found`,
+      message: db_result.length === 0 ? "No invoices found" : `Total ${db_result.length} invoices found`,
       data: db_result,
     };
   } catch (error) {

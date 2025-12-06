@@ -1,7 +1,9 @@
 import db from "@/config/db";
-import { lawyer_profile_model, UpdateLawyerWithUserType } from "../../models/lawyer/lawyer.model";
+import {
+  lawyer_profile_model,
+  UpdateLawyerWithUserType,
+} from "../../models/lawyer/lawyer.model";
 import { user_model } from "../../models/shared/user.model";
-import { GenderType, LanguagesType, LawyerFeeType, PracticeAreasType } from "../../types/user.types"
 import { eq, getTableColumns } from "drizzle-orm";
 import { undefinedToNull } from "@/utils/ts.utils";
 
@@ -9,7 +11,14 @@ const get_lawyer_profile = async (id: number) => {
   const userColumns = getTableColumns(user_model);
   const lawyerColumns = getTableColumns(lawyer_profile_model);
   // destructure to drop unwanted ones
-  const { id: userId, role, created_at, refresh_token, hashed_password, ...safeUserColumns } = userColumns;
+  const {
+    id: userId,
+    role,
+    created_at,
+    refresh_token,
+    hashed_password,
+    ...safeUserColumns
+  } = userColumns;
   const { id: lawyerId, ...safeLawyerColumns } = lawyerColumns;
 
   try {
@@ -19,7 +28,10 @@ const get_lawyer_profile = async (id: number) => {
         ...safeLawyerColumns,
       })
       .from(user_model)
-      .leftJoin(lawyer_profile_model, eq(user_model.id, lawyer_profile_model.id))
+      .leftJoin(
+        lawyer_profile_model,
+        eq(user_model.id, lawyer_profile_model.id)
+      )
       .where(eq(user_model.id, id))
       .limit(1);
 
@@ -39,7 +51,6 @@ const get_lawyer_profile = async (id: number) => {
       message: "Lawyer profile fetched successfully",
       data: profile,
     };
-
   } catch (error) {
     return {
       success: false,
@@ -50,12 +61,51 @@ const get_lawyer_profile = async (id: number) => {
   }
 };
 
-const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserType) => {
+const update_profile_picture = async (
+  id: number,
+  profile_picture: string
+) => {
   try {
+    const update_result = await db
+      .update(lawyer_profile_model)
+      .set({ profile_picture })
+      .where(eq(lawyer_profile_model.id, id))
+      .returning();
 
+    if (update_result.length > 0) {
+      const updated_profile = await get_lawyer_profile(id);
+      return {
+        success: true,
+        code: 200,
+        message: "Profile picture updated successfully",
+        data: updated_profile.data,
+      };
+    }
+
+    return {
+      success: false,
+      code: 404,
+      message: "Profile not found. Please complete your profile first.",
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR update_profile_picture",
+      error: error.message,
+    };
+  }
+};
+
+const update_lawyer_profile = async (
+  id: number,
+  profile: UpdateLawyerWithUserType
+) => {
+  try {
     if (profile.name) {
       // name is not part of the lawyer profile, so we don't update it here
-      const user_update_result = await db.update(user_model)
+      const user_update_result = await db
+        .update(user_model)
         .set({ name: profile.name })
         .where(eq(user_model.id, id))
         .returning();
@@ -69,7 +119,7 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
       }
     }
 
-    const refined_profile = undefinedToNull(profile)
+    const refined_profile = undefinedToNull(profile);
     // Attempt update
     const update_result = await db
       .update(lawyer_profile_model)
@@ -93,11 +143,12 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
       .returning();
 
     if (update_result.length > 0) {
+      const updated_profile = await get_lawyer_profile(id);
       return {
         success: true,
         code: 200,
         message: "Lawyer profile updated successfully",
-        data: update_result[0],
+        data: updated_profile.data,
       };
     }
 
@@ -146,15 +197,15 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
     await db
       .update(user_model)
       .set({ is_profile_complete: true })
-      .where(eq(user_model.id, id))
+      .where(eq(user_model.id, id));
 
+    const created_profile = await get_lawyer_profile(id);
     return {
       success: true,
       code: 201,
       message: "Lawyer profile created successfully",
-      data: insert_result[0],
+      data: created_profile.data,
     };
-
   } catch (error: any) {
     return {
       success: false,
@@ -165,4 +216,4 @@ const update_lawyer_profile = async (id: number, profile: UpdateLawyerWithUserTy
   }
 };
 
-export { update_lawyer_profile, get_lawyer_profile }
+export { update_lawyer_profile, get_lawyer_profile, update_profile_picture };
