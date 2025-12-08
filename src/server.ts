@@ -64,6 +64,9 @@ const app = new Elysia()
       .use(ai_chat_routes)
       .use(web_socket)
   )
+  .get("/", () => {
+    return "Welcome to Xegality Backend";
+  })
   .listen(SERVER_PORT);
 
 console.log(`[SERVER] -> http://localhost:${app.server?.port}`);
