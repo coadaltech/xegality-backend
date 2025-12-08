@@ -6,29 +6,29 @@ const pool = new sql.ConnectionPool({
   user: "xegality",
   password: "xegality",
   server: "172.24.132.187", // LAN IP of Windows machine
-  port: 1433,              // ensure same as configured
+  port: 1433, // ensure same as configured
   database: "Data_AC",
   options: {
-    encrypt: false,        // set true if using SSL
+    encrypt: false, // set true if using SSL
     trustServerCertificate: true,
   },
 });
 
-
-pool.connect()
+pool
+  .connect()
   .then(() => console.log("Connected to SQL Server"))
-  .catch(err => console.error("Connection failed:", err));
+  .catch((err) => console.error("Connection failed:", err));
 
-export { pool };
-
-
+// export { pool };
 
 async function exportToCSV() {
   try {
     await pool.connect();
     console.log("Exporting to CSV...");
 
-    const result = await pool.request().query("SELECT TOP 6000 * FROM citation");
+    const result = await pool
+      .request()
+      .query("SELECT TOP 6000 * FROM citation");
 
     const parser = new Parser();
     const csv = parser.parse(result.recordset);

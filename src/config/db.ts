@@ -21,6 +21,7 @@ const db_connect = () => {
       username: process.env.DB_USER,
       port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
       password: process.env.DB_PASSWORD,
+      ssl: process.env.DB_HOST?.includes('neon.tech') ? 'require' : false,
       debug: function (_, query) {
         console.log(
           `[DATABASE] QUERY EXECUTED : ${new Date().toLocaleString()}`

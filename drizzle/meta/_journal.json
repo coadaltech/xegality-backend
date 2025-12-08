@@ -29,6 +29,13 @@
       "when": 1765025870769,
       "tag": "0003_real_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765191871781,
+      "tag": "0004_whole_cargill",
+      "breakpoints": true
     }
   ]
 }

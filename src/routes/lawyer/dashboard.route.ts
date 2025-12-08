@@ -19,6 +19,10 @@ import {
   delete_invoice,
   update_invoice_status,
 } from "../../services/lawyer/payment.service";
+import {
+  upload_case_document,
+  get_case_documents,
+} from "../../services/shared/media.service";
 import { RoleType } from "../../types/user.types";
 import { LawyerInvoiceSchema } from "@/types/invoice.type";
 
@@ -201,6 +205,43 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
 
     set.status = history_res.code;
     return history_res;
-  });
+  })
+
+  .post(
+    "/upload-document/:caseId",
+    async ({ set, store, params, body }) => {
+      const upload_res = await upload_case_document(
+        body.file,
+        params.caseId,
+        store.id
+      );
+
+      set.status = upload_res.code;
+      return upload_res;
+    },
+    {
+      params: t.Object({
+        caseId: t.String({ description: "Case ID to upload document for" }),
+      }),
+      body: t.Object({
+        file: t.File(),
+      }),
+    }
+  )
+
+  .get(
+    "/documents/:caseId",
+    async ({ set, params }) => {
+      const docs_res = await get_case_documents(params.caseId);
+
+      set.status = docs_res.code;
+      return docs_res;
+    },
+    {
+      params: t.Object({
+        caseId: t.String({ description: "Case ID to fetch documents for" }),
+      }),
+    }
+  );
 
 export default lawyer_dashboard_routes;
