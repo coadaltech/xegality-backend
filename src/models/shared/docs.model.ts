@@ -6,13 +6,14 @@ import {
   timestamp,
   bigint,
   bigserial,
+  serial,
 } from "drizzle-orm/pg-core";
 import { user_model } from "./user.model";
 import { case_model } from "./case.model";
 
 // Message table definition
 export const media_model = pgTable("media", {
-  id: bigserial({ mode: "number" }).primaryKey(),
+  id: serial().primaryKey(),
   url: text().notNull(),
   type: varchar({ length: 50 }).notNull(),
   size: integer().notNull(),
