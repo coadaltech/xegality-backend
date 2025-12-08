@@ -417,8 +417,24 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         message: "Already Logged Out",
       };
     }
-    cookie["refresh_token"].remove();
-    cookie["access_token"].remove();
+    cookie["refresh_token"].set({
+      value: "",
+      httpOnly: true,
+      secure: true,
+      maxAge: 0,
+      path: "/",
+      domain: ".xegality.com",
+      sameSite: "none",
+    });
+    cookie["access_token"].set({
+      value: "",
+      httpOnly: true,
+      secure: true,
+      maxAge: 0,
+      path: "/",
+      domain: ".xegality.com",
+      sameSite: "none",
+    });
     set.status = 200;
     console.log(`[SERVER]   Logged Out : ${new Date().toLocaleString()}`);
     return {
