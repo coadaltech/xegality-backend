@@ -19,9 +19,11 @@ const ai_chat_message_model = pgTable("ai_chat_messages", {
     .references(() => ai_chat_session_model.id, { onDelete: "cascade" }),
   message: text().notNull(),
   sender: varchar({ length: 10, enum: ["user", "ai"] }).notNull(),
-  type: varchar({ length: 20, enum: ["text", "suggestion", "image"] }).default(
+  type: varchar({ length: 20, enum: ["text", "suggestion", "image", "document"] }).default(
     "text"
   ),
+  image_urls: text(),
+  document_urls: text(),
   timestamp: timestamp().notNull().defaultNow(),
 });
 

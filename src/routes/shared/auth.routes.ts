@@ -18,6 +18,7 @@ import {
   GoogleCallbackSchema,
 } from "../../types/auth.types";
 import { verify_access_token } from "@/utils/general.utils";
+import { set_auth_cookies, clear_auth_cookies } from "@/utils/cookie.utils";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
   // SIGNUP
@@ -111,24 +112,11 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         create_user_res.data?.refresh_token &&
         create_user_res.data?.access_token
       ) {
-        cookie["refresh_token"].set({
-          value: create_user_res.data.refresh_token,
-          httpOnly: true,
-          secure: true,
-          sameSite: "none",
-          maxAge: 60 * 60 * 24 * 7,
-          path: "/",
-          domain: ".xegality.com",
-        });
-        cookie["access_token"].set({
-          value: create_user_res.data.access_token,
-          httpOnly: true,
-          secure: true,
-          maxAge: 60 * 60 * 24,
-          path: "/",
-          sameSite: "none",
-          domain: ".xegality.com",
-        });
+        set_auth_cookies(
+          cookie,
+          create_user_res.data.access_token,
+          create_user_res.data.refresh_token
+        );
         console.log(
           `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
         );
@@ -184,25 +172,11 @@ const auth_routes = new Elysia({ prefix: "/auth" })
       data.data?.new_access_token &&
       data.data?.new_refresh_token
     ) {
-      cookie["refresh_token"].set({
-        value: data.data?.new_refresh_token,
-        httpOnly: true,
-        secure: true,
-        maxAge: 60 * 60 * 24 * 7,
-        path: "/",
-        domain: ".xegality.com",
-        sameSite: "none",
-      });
-      cookie["access_token"].set({
-        value: data.data?.new_refresh_token,
-        httpOnly: true,
-        secure: true,
-        maxAge: 60 * 60 * 24,
-        path: "/",
-        domain: ".xegality.com",
-        sameSite: "none",
-      });
-
+      set_auth_cookies(
+        cookie,
+        data.data.new_access_token,
+        data.data.new_refresh_token
+      );
       console.log(
         `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
       );
@@ -274,24 +248,11 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         response.data?.refresh_token &&
         response.data?.access_token
       ) {
-        cookie["refresh_token"].set({
-          value: response.data.refresh_token,
-          httpOnly: true,
-          secure: true,
-          maxAge: 60 * 60 * 24 * 7,
-          path: "/",
-          domain: ".xegality.com",
-          sameSite: "none",
-        });
-        cookie["access_token"].set({
-          value: response.data.access_token,
-          httpOnly: true,
-          secure: true,
-          maxAge: 60 * 60 * 24,
-          path: "/",
-          domain: ".xegality.com",
-          sameSite: "none",
-        });
+        set_auth_cookies(
+          cookie,
+          response.data.access_token,
+          response.data.refresh_token
+        );
         console.log(
           `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
         );
@@ -417,24 +378,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         message: "Already Logged Out",
       };
     }
-    cookie["refresh_token"].set({
-      value: "",
-      httpOnly: true,
-      secure: true,
-      maxAge: 0,
-      path: "/",
-      domain: ".xegality.com",
-      sameSite: "none",
-    });
-    cookie["access_token"].set({
-      value: "",
-      httpOnly: true,
-      secure: true,
-      maxAge: 0,
-      path: "/",
-      domain: ".xegality.com",
-      sameSite: "none",
-    });
+    clear_auth_cookies(cookie);
     set.status = 200;
     console.log(`[SERVER]   Logged Out : ${new Date().toLocaleString()}`);
     return {

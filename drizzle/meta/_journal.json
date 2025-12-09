@@ -36,6 +36,20 @@
       "when": 1765191871781,
       "tag": "0004_whole_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765284765097,
+      "tag": "0005_crazy_white_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1765287981471,
+      "tag": "0006_nervous_wildside",
+      "breakpoints": true
     }
   ]
 }

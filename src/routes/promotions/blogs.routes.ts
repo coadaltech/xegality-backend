@@ -7,7 +7,7 @@ import {
   update_blog,
   delete_blog,
 } from "@/services/shared/blog.service";
-import { upload_file } from "@/utils/file.utils";
+import { uploadFileToS3 } from "@/services/shared/s3.service";
 
 const blog_routes = new Elysia({ prefix: "/blogs" })
   .get("/", async ({ set }) => {
@@ -28,7 +28,7 @@ const blog_routes = new Elysia({ prefix: "/blogs" })
       const state_result = app_middleware({
         cookie,
         headers,
-        allowed: ["lawyer"],
+        allowed: ["admin"],
       });
       set.status = state_result.code;
       if (!state_result.data) return state_result;
@@ -41,7 +41,7 @@ const blog_routes = new Elysia({ prefix: "/blogs" })
     "/",
     async ({ body, set }) => {
       const formData = body as any;
-      const image_url = await upload_file(formData.image);
+      const { url: image_url } = await uploadFileToS3(formData.image, "blogs");
       const keywords = JSON.parse(formData.keywords);
       const sectionsData = JSON.parse(formData.sections);
 
@@ -53,7 +53,11 @@ const blog_routes = new Elysia({ prefix: "/blogs" })
               ? imageFiles
               : [imageFiles]
             : [];
-          const uploadedImages = await Promise.all(images.map(upload_file));
+          const uploadedImages = await Promise.all(
+            images.map((file) =>
+              uploadFileToS3(file, "blogs").then((obj) => obj.url)
+            )
+          );
 
           return {
             heading: section.heading,
@@ -92,7 +96,8 @@ const blog_routes = new Elysia({ prefix: "/blogs" })
       };
 
       if (formData.image) {
-        update_data.image = await upload_file(formData.image);
+        const { url } = await uploadFileToS3(formData.image, "blogs");
+        update_data.image = url;
       }
 
       if (formData.keywords) {
@@ -110,7 +115,9 @@ const blog_routes = new Elysia({ prefix: "/blogs" })
                 : [imageFiles]
               : [];
             const uploadedNewImages = await Promise.all(
-              newImages.map(upload_file)
+              newImages.map((file) =>
+                uploadFileToS3(file, "blogs").then((obj) => obj.url)
+              )
             );
 
             return {

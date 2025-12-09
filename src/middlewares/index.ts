@@ -22,8 +22,14 @@ export const authenticate_jwt = (access_token: string) => {
   }
 };
 
-export const app_middleware = ({ cookie, headers, allowed }: ElysiaMiddlewareType) => {
-  let access_token = String(cookie.access_token) || String(headers["authorization"]?.replace("Bearer ", "") ?? "");
+export const app_middleware = ({
+  cookie,
+  headers,
+  allowed,
+}: ElysiaMiddlewareType) => {
+  let access_token =
+    String(cookie.access_token) ||
+    String(headers["authorization"]?.replace("Bearer ", "") ?? "");
 
   if (!access_token) {
     return {
@@ -35,13 +41,18 @@ export const app_middleware = ({ cookie, headers, allowed }: ElysiaMiddlewareTyp
 
   const middleware_response = authenticate_jwt(access_token);
 
-  if (!middleware_response.success || (!middleware_response.data?.id && !middleware_response.data?.role)) {
+  if (
+    !middleware_response.success ||
+    (!middleware_response.data?.id && !middleware_response.data?.role)
+  ) {
     return {
       success: middleware_response.success,
       code: middleware_response.code,
       message: middleware_response.message,
     };
   }
+
+  console.log("role", middleware_response.data.role);
 
   if (allowed && !allowed.includes(middleware_response.data.role)) {
     return {
@@ -55,6 +66,6 @@ export const app_middleware = ({ cookie, headers, allowed }: ElysiaMiddlewareTyp
     success: middleware_response.success,
     code: middleware_response.code,
     message: middleware_response.message,
-    data: middleware_response.data
+    data: middleware_response.data,
   };
-}
+};

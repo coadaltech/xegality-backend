@@ -63,8 +63,12 @@ const ai_chat_routes = new Elysia({ prefix: "/ai-chat" })
         store.id,
         body.message,
         body.sender,
-        body.type
+        body.type,
+        body.image_urls,
+        body.document_urls
       );
+
+      console.log("body of message", body);
       set.status = response.code;
       return response;
     },
@@ -77,8 +81,11 @@ const ai_chat_routes = new Elysia({ prefix: "/ai-chat" })
             t.Literal("text"),
             t.Literal("suggestion"),
             t.Literal("image"),
+            t.Literal("document"),
           ])
         ),
+        image_urls: t.Optional(t.Array(t.String())),
+        document_urls: t.Optional(t.Array(t.String())),
       }),
     }
   )
@@ -110,14 +117,23 @@ const ai_chat_routes = new Elysia({ prefix: "/ai-chat" })
   })
 
   // Get AI response
-  .post("/generate", async ({ body, set }) => {
-    const response = await get_ai_response(body.message);
-    set.status = response.code;
-    return response;
-  }, {
-    body: t.Object({
-      message: t.String(),
-    }),
-  });
+  .post(
+    "/generate",
+    async ({ body, set }) => {
+      const response = await get_ai_response(body.message, body.images, body.documents);
+      set.status = response.code;
+      return response;
+    },
+    {
+      body: t.Object({
+        message: t.String(),
+        images: t.Optional(t.Array(t.String())),
+        documents: t.Optional(t.Array(t.Object({
+          data: t.String(),
+          mimeType: t.String(),
+        }))),
+      }),
+    }
+  );
 
 export default ai_chat_routes;

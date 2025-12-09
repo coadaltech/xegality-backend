@@ -100,7 +100,9 @@ export const send_message = async (
   user_id: number,
   message: string,
   sender: "user" | "ai",
-  type?: "text" | "suggestion" | "image"
+  type?: "text" | "suggestion" | "image" | "document",
+  image_urls?: string[],
+  document_urls?: string[]
 ) => {
   try {
     const session = await db
@@ -124,7 +126,14 @@ export const send_message = async (
 
     const newMessage = await db
       .insert(ai_chat_message_model)
-      .values({ session_id, message, sender, type: type || "text" })
+      .values({ 
+        session_id, 
+        message, 
+        sender, 
+        type: type || "text",
+        image_urls: image_urls ? JSON.stringify(image_urls) : undefined,
+        document_urls: document_urls ? JSON.stringify(document_urls) : undefined
+      })
       .returning();
 
     await db
@@ -147,7 +156,11 @@ export const send_message = async (
   }
 };
 
-export const get_ai_response = async (user_input: string) => {
+export const get_ai_response = async (
+  user_input: string,
+  images?: string[],
+  documents?: { data: string; mimeType: string }[]
+) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -164,15 +177,57 @@ export const get_ai_response = async (user_input: string) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: user_input }] }],
+          system_instruction: {
+            role: "system",
+            parts: [
+              {
+                text: `
+You are XEGALITY AI — an AI Lawyer Assistant.
+
+Guidelines:
+• Provide general legal information, not legal advice.
+• Only answer for legal queries.
+• Use simple, clear language.
+• Avoid jargon and technical terms.
+• Ask follow-up questions if needed,
+• Provide legal advice only if asked for.
+• If the user asks for legal advice, provide legal advice only.
+• Use Indian legal context unless specified otherwise.
+• Be neutral, clear, and professional.
+• Suggest legal options but never guarantee outcomes.
+• Ask clarification if the user question is incomplete.
+                `.trim(),
+              },
+            ],
+          },
+          contents: [
+            {
+              parts: [
+                { text: user_input },
+                ...(images || []).map((img) => ({
+                  inline_data: {
+                    mime_type: img.startsWith('data:image/png') ? 'image/png' : 
+                               img.startsWith('data:image/jpeg') ? 'image/jpeg' : 
+                               img.startsWith('data:image/jpg') ? 'image/jpeg' : 'image/jpeg',
+                    data: img.split(',')[1]
+                  }
+                })),
+                ...(documents || []).map((doc) => ({
+                  inline_data: {
+                    mime_type: doc.mimeType,
+                    data: doc.data
+                  }
+                }))
+              ],
+            },
+          ],
         }),
       }
     );
 
-    console.log("response", response);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error("Gemini API Error:", response.status, errorData);
       return {
         success: false,
         code: response.status,
@@ -198,6 +253,7 @@ export const get_ai_response = async (user_input: string) => {
       data: { response: aiText },
     };
   } catch (error) {
+    console.error("AI Response Error:", error);
     return {
       success: false,
       code: 500,
