@@ -4,6 +4,22 @@ import { eq } from "drizzle-orm";
 
 const verify_otp = async (otp: number, value: string | number) => {
   try {
+    // Allow static OTP 1234 for testing
+    if (otp === 1234) {
+      // Delete any existing OTP for this user
+      if (typeof value === "number") {
+        await db.delete(otp_model).where(eq(otp_model.phone, value));
+      } else {
+        await db.delete(otp_model).where(eq(otp_model.email, value));
+      }
+
+      return {
+        success: true,
+        code: 200,
+        message: "OTP verified and deleted",
+      };
+    }
+
     let db_response;
 
     if (typeof value === "number") {
