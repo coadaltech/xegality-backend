@@ -19,6 +19,10 @@ import {
 } from "../../types/auth.types";
 import { verify_access_token } from "@/utils/general.utils";
 import { set_auth_cookies, clear_auth_cookies } from "@/utils/cookie.utils";
+import { generate_jwt, generate_refresh_jwt } from "@/utils/general.utils";
+import { eq } from "drizzle-orm";
+import db from "../../config/db";
+import { user_model } from "../../models/shared/user.model";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
   // SIGNUP
@@ -266,7 +270,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
 
   .post(
     "/verify-login-otp",
-    async ({ body, set }) => {
+    async ({ body, set, cookie }) => {
       const { phone, email } = body;
       if (!phone && !email) {
         set.status = 400;
@@ -299,6 +303,59 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         );
         return otpResponse;
       }
+
+      // OTP is valid, now authenticate user and return tokens
+      const user = await db
+        .select()
+        .from(user_model)
+        .where(
+          typeof value === "number"
+            ? eq(user_model.phone, value)
+            : eq(user_model.email, value)
+        )
+        .then((res) => res[0]);
+
+      if (!user) {
+        set.status = 404;
+        return {
+          success: false,
+          code: 404,
+          message: "User not found",
+        };
+      }
+
+      const access_token = generate_jwt(
+        user.id,
+        user.role,
+        user.is_profile_complete || false
+      );
+      const refresh_token = generate_refresh_jwt(user.id, user.role);
+
+      await db
+        .update(user_model)
+        .set({ refresh_token })
+        .where(eq(user_model.id, user.id));
+
+      // Set auth cookies like signup endpoint
+      set_auth_cookies(cookie, access_token, refresh_token);
+      console.log(
+        `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
+      );
+
+      set.status = 200;
+      console.log(
+        `[SERVER]   OTP Login Successful : ${new Date().toLocaleString()}`
+      );
+      return {
+        success: true,
+        code: 200,
+        message: "Login successful via OTP",
+        data: {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+        },
+      };
     },
     { body: VerifyLoginOtpSchema }
   )

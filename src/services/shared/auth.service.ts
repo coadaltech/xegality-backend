@@ -9,10 +9,13 @@ import {
   generate_refresh_jwt,
   random_otp,
   verify_refresh_token,
+  hash_password,
 } from "@/utils/general.utils";
 import { get_tokens, get_user_info } from "./google.service";
 import { JwtPayload } from "jsonwebtoken";
 import { otp_model } from "../../models/shared/otp.model";
+import { sendSMS, generateOTPSmsMessage } from "./sms.service";
+import { sendOTP as sendEmailOTP } from "../nodemailer";
 
 const handle_login = async (password: string, value: number | string) => {
   try {
@@ -59,7 +62,11 @@ const handle_login = async (password: string, value: number | string) => {
       };
     }
 
-    const access_token = generate_jwt(user.id, user.role, user.is_profile_complete || false);
+    const access_token = generate_jwt(
+      user.id,
+      user.role,
+      user.is_profile_complete || false
+    );
     const refresh_token = generate_refresh_jwt(user.id, user.role);
 
     await db.update(user_model).set({ refresh_token }).where(whereCondition);
@@ -88,7 +95,11 @@ const handle_login = async (password: string, value: number | string) => {
   }
 };
 
-const create_tokens = async (id: number, role: string, is_profile_complete: boolean) => {
+const create_tokens = async (
+  id: number,
+  role: string,
+  is_profile_complete: boolean
+) => {
   try {
     const new_access_token = generate_jwt(id, role, is_profile_complete);
     const new_refresh_token = generate_refresh_jwt(id, role);
@@ -142,7 +153,7 @@ const verify_token_with_db = async (refresh_token: string) => {
       await db
         .select({
           refresh_token: user_model.refresh_token,
-          is_profile_complete: user_model.is_profile_complete
+          is_profile_complete: user_model.is_profile_complete,
         })
         .from(user_model)
         .where(eq(user_model.id, res.id))
@@ -162,7 +173,7 @@ const verify_token_with_db = async (refresh_token: string) => {
       data: {
         id: data.payload.id,
         role: data.payload.role,
-        is_profile_complete: token_exists.is_profile_complete || false
+        is_profile_complete: token_exists.is_profile_complete || false,
       },
     };
   } catch (error) {
@@ -236,7 +247,11 @@ const handle_google_callback = async ({ query, set }: any) => {
     // Login
     if (exisiting_user) {
       const refresh_token = generate_refresh_jwt(exisiting_user.id, role);
-      const access_token = generate_jwt(exisiting_user.id, role, exisiting_user.is_profile_complete || false);
+      const access_token = generate_jwt(
+        exisiting_user.id,
+        role,
+        exisiting_user.is_profile_complete || false
+      );
       await db
         .update(user_model)
         .set({
@@ -301,7 +316,11 @@ const handle_login_by_token = async (payload: JwtPayload) => {
       .where(eq(user_model.id, id))
       .then((rows) => rows[0]);
 
-    const access_token = generate_jwt(id, role, user.is_profile_complete || false);
+    const access_token = generate_jwt(
+      id,
+      role,
+      user.is_profile_complete || false
+    );
     const refresh_token = generate_refresh_jwt(id, role);
 
     const updated_user = await db
@@ -345,6 +364,7 @@ const handle_login_by_token = async (payload: JwtPayload) => {
 };
 const otp_cycle = async (value: string | number) => {
   const otp = random_otp();
+  console.log("otp", otp);
 
   if (typeof value === "number") {
     // Handle phone login
@@ -366,13 +386,30 @@ const otp_cycle = async (value: string | number) => {
         phone: value,
       });
     }
+
+    // Send SMS with OTP
+    // const message = generateOTPSmsMessage(otp);
+    // const smsResponse = await sendSMS({
+    //   number: value.toString(),
+    //   message,
+    // });
+
+    // if (!smsResponse.success) {
+    //   console.error("[SMS Service] Failed to send OTP SMS:", smsResponse.error);
+    //   return {
+    //     success: false,
+    //     code: 500,
+    //     message: `Failed to send OTP via SMS: ${smsResponse.error}`,
+    //   };
+    // }
+
     return {
       success: true,
       code: 200,
       message: `OTP sent to phone: ${value}`,
     };
   } else {
-    // Handle phone login
+    // Handle email login
     const existing = (
       await db
         .select()
@@ -391,10 +428,179 @@ const otp_cycle = async (value: string | number) => {
         email: value,
       });
     }
+
+    // Send email with OTP
+    const emailResponse = await sendEmailOTP(value.toString(), otp.toString());
+
+    console.log("email response", emailResponse);
+
+    if (!emailResponse || !emailResponse.success) {
+      console.error("[Email Service] Failed to send OTP email");
+      return {
+        success: false,
+        code: 500,
+        message: "Failed to send OTP via email",
+      };
+    }
+
     return {
       success: true,
       code: 200,
       message: `OTP sent to email: ${value}`,
+    };
+  }
+};
+
+const change_password = async (
+  userId: number,
+  currentPassword: string,
+  newPassword: string
+) => {
+  try {
+    // Get user with current password
+    const user = await db
+      .select({
+        id: user_model.id,
+        hashed_password: user_model.hashed_password,
+        isdeleted: user_model.isdeleted,
+      })
+      .from(user_model)
+      .where(eq(user_model.id, userId))
+      .then((rows) => rows[0]);
+
+    if (!user) {
+      return {
+        success: false,
+        code: 404,
+        message: "User not found",
+      };
+    }
+
+    if (user.isdeleted) {
+      return {
+        success: false,
+        code: 403,
+        message: "Account has been deleted",
+      };
+    }
+
+    if (!user.hashed_password) {
+      return {
+        success: false,
+        code: 400,
+        message: "Account does not have a password set",
+      };
+    }
+
+    // Verify current password
+    const isCurrentPasswordCorrect = await compare_password(
+      currentPassword,
+      user.hashed_password
+    );
+
+    if (!isCurrentPasswordCorrect) {
+      return {
+        success: false,
+        code: 401,
+        message: "Current password is incorrect",
+      };
+    }
+
+    // Hash new password
+    const hashedNewPassword = await hash_password(newPassword);
+
+    // Update password and clear refresh token
+    await db
+      .update(user_model)
+      .set({
+        hashed_password: hashedNewPassword,
+        refresh_token: "",
+      })
+      .where(eq(user_model.id, userId));
+
+    return {
+      success: true,
+      code: 200,
+      message: "Password changed successfully",
+    };
+  } catch (error: any) {
+    console.error("Change password error:", error);
+    return {
+      success: false,
+      code: 500,
+      message: "Internal server error while changing password",
+    };
+  }
+};
+
+const soft_delete_account = async (userId: number, password: string) => {
+  try {
+    // Get user with current password
+    const user = await db
+      .select({
+        id: user_model.id,
+        hashed_password: user_model.hashed_password,
+        isdeleted: user_model.isdeleted,
+      })
+      .from(user_model)
+      .where(eq(user_model.id, userId))
+      .then((rows) => rows[0]);
+
+    if (!user) {
+      return {
+        success: false,
+        code: 404,
+        message: "User not found",
+      };
+    }
+
+    if (user.isdeleted) {
+      return {
+        success: false,
+        code: 403,
+        message: "Account has already been deleted",
+      };
+    }
+
+    if (!user.hashed_password) {
+      return {
+        success: false,
+        code: 400,
+        message: "Account does not have a password set",
+      };
+    }
+
+    // Verify password
+    const isPasswordCorrect = await compare_password(
+      password,
+      user.hashed_password
+    );
+
+    if (!isPasswordCorrect) {
+      return {
+        success: false,
+        code: 401,
+        message: "Password is incorrect",
+      };
+    }
+
+    // Soft delete by setting isDeleted to true
+    await db
+      .update(user_model)
+      .set({ isdeleted: true })
+      .where(eq(user_model.id, userId));
+
+    return {
+      success: true,
+      code: 200,
+      message: "Account deleted successfully",
+    };
+  } catch (error: any) {
+    console.error("Soft delete account error:", error);
+    return {
+      success: false,
+      code: 500,
+      message: "Internal server error while deleting account",
     };
   }
 };
@@ -406,4 +612,6 @@ export {
   otp_cycle,
   handle_google_callback,
   verify_token_with_db,
+  change_password,
+  soft_delete_account,
 };

@@ -166,10 +166,13 @@ export const adminUsersRoutes = new Elysia({ prefix: "/admin/users" })
     }
   )
 
-  // Delete user
+  // Delete user (soft delete)
   .delete("/:id", async ({ params: { id } }) => {
     try {
-      await db.delete(user_model).where(eq(user_model.id, parseInt(id)));
+      await db
+        .update(user_model)
+        .set({ isdeleted: true })
+        .where(eq(user_model.id, parseInt(id)));
 
       return { success: true, message: "User deleted successfully" };
     } catch (error) {

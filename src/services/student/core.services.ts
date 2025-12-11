@@ -1,14 +1,24 @@
 import db from "@/config/db";
-import { student_profile_model, UpdateStudentWithUserType } from "@/models/student/student.model";
+import {
+  student_profile_model,
+  UpdateStudentWithUserType,
+} from "@/models/student/student.model";
 import { user_model } from "../../models/shared/user.model";
-import { eq, getTableColumns } from "drizzle-orm";
+import { eq, getTableColumns, and } from "drizzle-orm";
 import { undefinedToNull } from "@/utils/ts.utils";
 
 const get_student_profile = async (id: number) => {
   const userColumns = getTableColumns(user_model);
   const studentColumns = getTableColumns(student_profile_model);
   // destructure to drop unwanted ones
-  const { id: userId, role, created_at, refresh_token, hashed_password, ...safeUserColumns } = userColumns;
+  const {
+    id: userId,
+    role,
+    created_at,
+    refresh_token,
+    hashed_password,
+    ...safeUserColumns
+  } = userColumns;
   const { id: studentId, ...safeStudentColumns } = studentColumns;
 
   try {
@@ -18,8 +28,11 @@ const get_student_profile = async (id: number) => {
         ...safeStudentColumns,
       })
       .from(user_model)
-      .leftJoin(student_profile_model, eq(user_model.id, student_profile_model.id))
-      .where(eq(user_model.id, id))
+      .leftJoin(
+        student_profile_model,
+        eq(user_model.id, student_profile_model.id)
+      )
+      .where(and(eq(user_model.id, id), eq(user_model.isdeleted, false)))
       .limit(1);
 
     if (result.length === 0) {
@@ -38,7 +51,6 @@ const get_student_profile = async (id: number) => {
       message: "Student profile fetched successfully",
       data: profile,
     };
-
   } catch (error) {
     return {
       success: false,
@@ -49,12 +61,15 @@ const get_student_profile = async (id: number) => {
   }
 };
 
-const update_student_profile = async (id: number, profile: UpdateStudentWithUserType) => {
+const update_student_profile = async (
+  id: number,
+  profile: UpdateStudentWithUserType
+) => {
   try {
-
     if (profile.name) {
       // name is not part of the student profile, so we don't update it here
-      const user_update_result = await db.update(user_model)
+      const user_update_result = await db
+        .update(user_model)
         .set({ name: profile.name })
         .where(eq(user_model.id, id))
         .returning();
@@ -68,7 +83,7 @@ const update_student_profile = async (id: number, profile: UpdateStudentWithUser
       }
     }
 
-    const refined_profile = undefinedToNull(profile)
+    const refined_profile = undefinedToNull(profile);
     // Attempt update
     const update_result = await db
       .update(student_profile_model)
@@ -118,7 +133,7 @@ const update_student_profile = async (id: number, profile: UpdateStudentWithUser
     }
 
     // Insert new student profile
-    console.log("inserting new profile ->", profile)
+    console.log("inserting new profile ->", profile);
     const insert_result = await db
       .insert(student_profile_model)
       .values({
@@ -146,7 +161,7 @@ const update_student_profile = async (id: number, profile: UpdateStudentWithUser
     await db
       .update(user_model)
       .set({ is_profile_complete: true })
-      .where(eq(user_model.id, id))
+      .where(eq(user_model.id, id));
 
     return {
       success: true,
@@ -154,7 +169,6 @@ const update_student_profile = async (id: number, profile: UpdateStudentWithUser
       message: "Student profile created successfully",
       data: insert_result[0],
     };
-
   } catch (error: any) {
     return {
       success: false,
@@ -165,5 +179,4 @@ const update_student_profile = async (id: number, profile: UpdateStudentWithUser
   }
 };
 
-export { update_student_profile, get_student_profile }
-
+export { update_student_profile, get_student_profile };

@@ -5,6 +5,10 @@ import {
   update_lawyer_profile,
   update_profile_picture,
 } from "../../services/lawyer/core.service";
+import {
+  change_password,
+  soft_delete_account,
+} from "../../services/shared/auth.service";
 import { LawyerProfileSchema } from "../../types/lawyer.types";
 
 const lawyer_core_routes = new Elysia({ prefix: "/lawyer" })
@@ -58,6 +62,39 @@ const lawyer_core_routes = new Elysia({ prefix: "/lawyer" })
     {
       body: t.Object({
         profile_picture: t.String(),
+      }),
+    }
+  )
+  .post(
+    "/change-password",
+    async ({ body, set, store }) => {
+      const result = await change_password(
+        store.id,
+        body.currentPassword,
+        body.newPassword
+      );
+
+      set.status = result.code;
+      return result;
+    },
+    {
+      body: t.Object({
+        currentPassword: t.String(),
+        newPassword: t.String(),
+      }),
+    }
+  )
+  .post(
+    "/delete-account",
+    async ({ body, set, store }) => {
+      const result = await soft_delete_account(store.id, body.password);
+
+      set.status = result.code;
+      return result;
+    },
+    {
+      body: t.Object({
+        password: t.String(),
       }),
     }
   );

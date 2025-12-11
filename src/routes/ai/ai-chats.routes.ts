@@ -120,7 +120,7 @@ const ai_chat_routes = new Elysia({ prefix: "/ai-chat" })
   .post(
     "/generate",
     async ({ body, set }) => {
-      const response = await get_ai_response(body.message, body.images, body.documents);
+      const response = await get_ai_response(body.message, body.images, body.documents, body.chatHistory);
       set.status = response.code;
       return response;
     },
@@ -131,6 +131,10 @@ const ai_chat_routes = new Elysia({ prefix: "/ai-chat" })
         documents: t.Optional(t.Array(t.Object({
           data: t.String(),
           mimeType: t.String(),
+        }))),
+        chatHistory: t.Optional(t.Array(t.Object({
+          role: t.Union([t.Literal("user"), t.Literal("assistant")]),
+          content: t.String(),
         }))),
       }),
     }

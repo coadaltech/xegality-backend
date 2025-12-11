@@ -159,7 +159,8 @@ export const send_message = async (
 export const get_ai_response = async (
   user_input: string,
   images?: string[],
-  documents?: { data: string; mimeType: string }[]
+  documents?: { data: string; mimeType: string }[],
+  chatHistory?: { role: "user" | "assistant"; content: string }[]
 ) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -201,7 +202,12 @@ Guidelines:
             ],
           },
           contents: [
+            ...(chatHistory || []).map((msg) => ({
+              role: msg.role === "assistant" ? "model" : msg.role,
+              parts: [{ text: msg.content }]
+            })),
             {
+              role: "user",
               parts: [
                 { text: user_input },
                 ...(images || []).map((img) => ({

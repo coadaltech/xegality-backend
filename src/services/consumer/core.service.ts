@@ -1,15 +1,24 @@
 import db from "@/config/db";
-import { consumer_profile_model, UpdateConsumerWithUserType } from "@/models/consumer/consumer.model";
+import {
+  consumer_profile_model,
+  UpdateConsumerWithUserType,
+} from "@/models/consumer/consumer.model";
 import { user_model } from "@/models/shared/user.model";
 import { undefinedToNull } from "@/utils/ts.utils";
-import { getTableColumns, eq } from "drizzle-orm";
-
+import { getTableColumns, eq, and } from "drizzle-orm";
 
 const get_consumer_profile = async (id: number) => {
   const userColumns = getTableColumns(user_model);
   const consumerColumns = getTableColumns(consumer_profile_model);
   // destructure to drop unwanted ones
-  const { id: userId, role, created_at, refresh_token, hashed_password, ...safeUserColumns } = userColumns;
+  const {
+    id: userId,
+    role,
+    created_at,
+    refresh_token,
+    hashed_password,
+    ...safeUserColumns
+  } = userColumns;
   const { id: consumerId, ...safeConsumerColumns } = consumerColumns;
 
   try {
@@ -19,8 +28,11 @@ const get_consumer_profile = async (id: number) => {
         ...safeConsumerColumns,
       })
       .from(user_model)
-      .leftJoin(consumer_profile_model, eq(user_model.id, consumer_profile_model.id))
-      .where(eq(user_model.id, id))
+      .leftJoin(
+        consumer_profile_model,
+        eq(user_model.id, consumer_profile_model.id)
+      )
+      .where(and(eq(user_model.id, id), eq(user_model.isdeleted, false)))
       .limit(1);
 
     if (result.length === 0) {
@@ -39,7 +51,6 @@ const get_consumer_profile = async (id: number) => {
       message: "Consumer profile fetched successfully",
       data: profile,
     };
-
   } catch (error) {
     console.error("ERROR get_consumer_profile:", error);
     return {
@@ -51,12 +62,15 @@ const get_consumer_profile = async (id: number) => {
   }
 };
 
-const update_consumer_profile = async (id: number, profile: UpdateConsumerWithUserType) => {
+const update_consumer_profile = async (
+  id: number,
+  profile: UpdateConsumerWithUserType
+) => {
   try {
-
     if (profile.name) {
       // name is not part of the consumer profile, so we don't update it here
-      const user_update_result = await db.update(user_model)
+      const user_update_result = await db
+        .update(user_model)
         .set({ name: profile.name })
         .where(eq(user_model.id, id))
         .returning();
@@ -70,7 +84,7 @@ const update_consumer_profile = async (id: number, profile: UpdateConsumerWithUs
       }
     }
 
-    const refined_profile = undefinedToNull(profile)
+    const refined_profile = undefinedToNull(profile);
     // Attempt update
     const update_result = await db
       .update(consumer_profile_model)
@@ -121,7 +135,7 @@ const update_consumer_profile = async (id: number, profile: UpdateConsumerWithUs
     await db
       .update(user_model)
       .set({ is_profile_complete: true })
-      .where(eq(user_model.id, id))
+      .where(eq(user_model.id, id));
 
     return {
       success: true,
@@ -129,7 +143,6 @@ const update_consumer_profile = async (id: number, profile: UpdateConsumerWithUs
       message: "Consumer profile created successfully",
       data: insert_result[0],
     };
-
   } catch (error: any) {
     return {
       success: false,

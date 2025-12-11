@@ -4,7 +4,7 @@ import {
   UpdateLawyerWithUserType,
 } from "../../models/lawyer/lawyer.model";
 import { user_model } from "../../models/shared/user.model";
-import { eq, getTableColumns } from "drizzle-orm";
+import { eq, getTableColumns, and } from "drizzle-orm";
 import { undefinedToNull } from "@/utils/ts.utils";
 
 const get_lawyer_profile = async (id: number) => {
@@ -32,7 +32,7 @@ const get_lawyer_profile = async (id: number) => {
         lawyer_profile_model,
         eq(user_model.id, lawyer_profile_model.id)
       )
-      .where(eq(user_model.id, id))
+      .where(and(eq(user_model.id, id), eq(user_model.isdeleted, false)))
       .limit(1);
 
     if (result.length === 0) {
@@ -61,10 +61,7 @@ const get_lawyer_profile = async (id: number) => {
   }
 };
 
-const update_profile_picture = async (
-  id: number,
-  profile_picture: string
-) => {
+const update_profile_picture = async (id: number, profile_picture: string) => {
   try {
     const update_result = await db
       .update(lawyer_profile_model)
