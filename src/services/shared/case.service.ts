@@ -1,23 +1,29 @@
 import { eq } from "drizzle-orm";
 import db from "../../config/db";
-import { case_model, } from "../../models/shared/case.model";
+import { case_model } from "../../models/shared/case.model";
 import { RoleType } from "../../types/user.types";
-import { format_time_spent, format_days_since_date } from "@/utils/general.utils";
+import {
+  format_time_spent,
+  format_days_since_date,
+} from "@/utils/general.utils";
 
 const get_cases_list = async (id: number, role: RoleType) => {
   try {
-
-    const db_result =
-      await db
-        .select({
-          case_id: case_model.id,
-          type: case_model.type,
-          title: case_model.title,
-          lawyer: case_model.assigned_to,
-          status: case_model.status,
-        })
-        .from(case_model)
-        .where(eq(role === "lawyer" ? case_model.assigned_by : case_model.consumer_id, id))
+    const db_result = await db
+      .select({
+        case_id: case_model.id,
+        type: case_model.type,
+        title: case_model.title,
+        lawyer: case_model.assigned_to,
+        status: case_model.status,
+      })
+      .from(case_model)
+      .where(
+        eq(
+          role === "lawyer" ? case_model.assigned_by : case_model.consumer_id,
+          id
+        )
+      );
 
     if (db_result.length === 0) {
       return {
@@ -44,7 +50,10 @@ const get_cases_list = async (id: number, role: RoleType) => {
 
 const get_case_details = async (case_id: string) => {
   try {
-    const db_results = await db.select().from(case_model).where(eq(case_model.id, case_id));
+    const db_results = await db
+      .select()
+      .from(case_model)
+      .where(eq(case_model.id, case_id));
 
     if (db_results.length === 0) {
       return {
@@ -83,22 +92,24 @@ const get_case_details = async (case_id: string) => {
         total_documents,
         timeline: db_results[0].timeline,
         total_activities,
-        last_activity: db_results[0].updated_at
-      }
-    }
-  }
-  catch (error) {
+        last_activity: db_results[0].updated_at,
+      },
+    };
+  } catch (error) {
     return {
       success: false,
       code: 500,
       message: "ERROR get_case_details",
     };
   }
-}
+};
 
 const find_case_by_id = async (id: string) => {
   try {
-    const case_opportunities = await db.select().from(case_model).where(eq(case_model.id, id))
+    const case_opportunities = await db
+      .select()
+      .from(case_model)
+      .where(eq(case_model.id, id));
     if (case_opportunities.length === 0) {
       return {
         success: false,

@@ -1,6 +1,11 @@
 import db from "../../config/db";
 import { or } from "drizzle-orm";
-import { case_model, CaseModelType, InsertCaseType, UpdateCaseType } from "../../models/shared/case.model";
+import {
+  case_model,
+  CaseModelType,
+  InsertCaseType,
+  UpdateCaseType,
+} from "../../models/shared/case.model";
 import { generate_case_id } from "@/utils/general.utils";
 import { find_case_by_id } from "../shared/case.service";
 import { create_user, find_user_by_id } from "../shared/user.service";
@@ -10,15 +15,25 @@ import { user_model } from "@/models/shared/user.model";
 import { consumer_profile_model } from "@/models/consumer/consumer.model";
 import { user_connections_model } from "@/models/shared/chat.model";
 
-const create_new_case = async (body: UpdateCaseType, assigned_by_id: number) => {
+const create_new_case = async (
+  body: UpdateCaseType,
+  assigned_by_id: number
+) => {
   try {
     let case_id;
-    do { case_id = generate_case_id(body.type || "NA") } while ((await find_case_by_id(case_id)).success);
+    do {
+      case_id = generate_case_id(body.type || "NA");
+    } while ((await find_case_by_id(case_id)).success);
 
     // Create a new user if consumer_id is not provided
-    let new_account_flag = false
+    let new_account_flag = false;
     if (!body.consumer_id && body.consumer_name) {
-      const create_user_result = await create_user(body.consumer_name, `${body.consumer_phone}`, "consumer", body.consumer_phone)
+      const create_user_result = await create_user(
+        body.consumer_name,
+        `${body.consumer_phone}`,
+        "consumer",
+        body.consumer_phone
+      );
       if (!create_user_result.success || !create_user_result.data) {
         return {
           success: false,
@@ -29,9 +44,8 @@ const create_new_case = async (body: UpdateCaseType, assigned_by_id: number) => 
 
       // fetch the created user ID
       body.consumer_id = create_user_result.data.user_id;
-      new_account_flag = true
-    }
-    else {
+      new_account_flag = true;
+    } else {
       // Validate existing consumer_id
       if (!body.consumer_id) {
         return {
@@ -66,7 +80,7 @@ const create_new_case = async (body: UpdateCaseType, assigned_by_id: number) => 
         success: false,
         code: 400,
         message: "Missing required fields to create a case",
-      }
+      };
     }
 
     const result = await db
@@ -87,11 +101,13 @@ const create_new_case = async (body: UpdateCaseType, assigned_by_id: number) => 
         consumer_age: body.consumer_age,
         consumer_address: body.consumer_address,
         consumer_documents: body.consumer_documents || [],
-        timeline: body.timeline || [{
-          id: 1,
-          title: "Case Opened",
-          description: "Case is initiated",
-        }]
+        timeline: body.timeline || [
+          {
+            id: 1,
+            title: "Case Opened",
+            description: "Case is initiated",
+          },
+        ],
       })
       .returning();
 
@@ -102,7 +118,6 @@ const create_new_case = async (body: UpdateCaseType, assigned_by_id: number) => 
       data: { ...result[0], new_account: new_account_flag },
     };
   } catch (error: any) {
-
     // Customize known error responses
     if (error?.cause?.code === "23505") {
       return {
@@ -120,7 +135,6 @@ const create_new_case = async (body: UpdateCaseType, assigned_by_id: number) => 
     };
   }
 };
-
 
 const update_case = async (body: UpdateCaseType) => {
   try {
@@ -217,22 +231,31 @@ const get_connected_consumers = async (consumer_id: number) => {
         // law_firm: consumer_profile_model.law_firm,
       })
       .from(user_connections_model)
-      .leftJoin(user_model, or(
-        eq(user_connections_model.from, user_model.id),
-        eq(user_connections_model.to, user_model.id)
-      ))
-      .leftJoin(consumer_profile_model, or(
-        eq(consumer_profile_model.id, user_model.id),
-        eq(consumer_profile_model.id, user_model.id)
-      ))
+      .leftJoin(
+        user_model,
+        or(
+          eq(user_connections_model.from, user_model.id),
+          eq(user_connections_model.to, user_model.id)
+        )
+      )
+      .leftJoin(
+        consumer_profile_model,
+        or(
+          eq(consumer_profile_model.id, user_model.id),
+          eq(consumer_profile_model.id, user_model.id)
+        )
+      )
       .where(
         or(
           eq(user_connections_model.from, consumer_id),
           eq(user_connections_model.to, consumer_id)
-        ))
+        )
+      );
 
     // extract only consumers
-    const connected_consumers = db_results.filter(consumer => consumer.role === "consumer");
+    const connected_consumers = db_results.filter(
+      (consumer) => consumer.role === "consumer"
+    );
 
     if (db_results.length === 0) {
       return {
@@ -249,17 +272,14 @@ const get_connected_consumers = async (consumer_id: number) => {
       message: "Connected consumers retrieved successfully",
       data: connected_consumers,
     };
-
-  }
-  catch (error) {
+  } catch (error) {
     return {
       success: false,
       code: 500,
       message: "ERROR get_connected_consumers",
     };
   }
-}
-
+};
 
 const get_cases_history = async (id: number) => {
   try {
@@ -267,10 +287,7 @@ const get_cases_history = async (id: number) => {
       .select()
       .from(case_model)
       .where(
-        and(
-          eq(case_model.assigned_by, id),
-          eq(case_model.status, "closed")
-        )
+        and(eq(case_model.assigned_by, id), eq(case_model.status, "closed"))
       )
       .orderBy(case_model.updated_at);
 
@@ -289,7 +306,6 @@ const get_cases_history = async (id: number) => {
       message: "Closed cases retrieved successfully",
       data: db_results,
     };
-
   } catch (error) {
     return {
       success: false,
@@ -297,6 +313,65 @@ const get_cases_history = async (id: number) => {
       message: "ERROR get_cases_history",
     };
   }
-}
+};
 
-export { create_new_case, update_case, get_connected_consumers, get_cases_history };
+const delete_case = async (caseId: string, lawyer_id: number) => {
+  try {
+    // Check if the case exists and belongs to the lawyer
+    const existing_case = await find_case_by_id(caseId);
+    if (!existing_case.success) {
+      return {
+        success: false,
+        code: 404,
+        message: "Case not found with the provided ID",
+      };
+    }
+
+    // Verify the case belongs to the requesting lawyer
+    if (existing_case.data?.assigned_by !== lawyer_id) {
+      return {
+        success: false,
+        code: 403,
+        message: "You are not authorized to delete this case",
+      };
+    }
+
+    // Delete the case
+    const delete_result = await db
+      .delete(case_model)
+      .where(eq(case_model.id, caseId))
+      .returning();
+
+    if (delete_result.length === 0) {
+      return {
+        success: false,
+        code: 404,
+        message: "Failed to delete case",
+      };
+    }
+
+    return {
+      success: true,
+      code: 200,
+      message: "Case deleted successfully",
+      data: delete_result[0],
+    };
+  } catch (error: any) {
+    console.error("Error deleting case:", error);
+
+    return {
+      success: false,
+      code: 500,
+      message: "Internal server error while deleting case",
+      error: error?.message || String(error),
+    };
+  }
+};
+
+export {
+  create_new_case,
+  update_case,
+  delete_case,
+  get_connected_consumers,
+  get_cases_history,
+};

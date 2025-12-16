@@ -7,10 +7,12 @@ import {
 } from "../../services/shared/case.service";
 import {
   create_new_case,
-  get_cases_history,
-  get_connected_consumers,
   update_case,
+  delete_case,
+  get_connected_consumers,
+  get_cases_history,
 } from "../../services/lawyer/dashboard.service";
+import { generateInvoicePDF } from "../../services/shared/pdf.service";
 import {
   create_invoice,
   get_invoices_list,
@@ -22,6 +24,7 @@ import {
 import {
   upload_case_document,
   get_case_documents,
+  update_document_title,
 } from "../../services/shared/media.service";
 import { RoleType } from "../../types/user.types";
 import { LawyerInvoiceSchema } from "@/types/invoice.type";
@@ -91,6 +94,21 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
     {
       params: t.Object({
         id: t.String({ description: "ID of the case to fetch details for" }),
+      }),
+    }
+  )
+
+  .delete(
+    "/delete-case/:id",
+    async ({ set, store, params }) => {
+      const delete_response = await delete_case(params.id, store.id);
+
+      set.status = delete_response.code;
+      return delete_response;
+    },
+    {
+      params: t.Object({
+        id: t.String({ description: "Case ID to delete" }),
       }),
     }
   )
@@ -200,6 +218,39 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
     }
   )
 
+  .get(
+    "/generate-invoice-pdf/:invoiceNumber",
+    async ({ set, store, params }) => {
+      const pdf_response = await generateInvoicePDF(params.invoiceNumber);
+
+      if (pdf_response.success && pdf_response.data) {
+        // Set headers for PDF download with CORS
+        set.headers = {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${pdf_response.filename}"`,
+          "Content-Length": pdf_response.data.length.toString(),
+          "Access-Control-Allow-Origin":
+            process.env.FRONTEND_URL || "http://localhost:3000",
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        };
+
+        return pdf_response.data;
+      }
+
+      set.status = pdf_response.code;
+      return pdf_response;
+    },
+    {
+      params: t.Object({
+        invoiceNumber: t.String({
+          description: "Invoice number to generate PDF for",
+        }),
+      }),
+    }
+  )
+
   .get("/fetch-closed-cases", async ({ set, store }) => {
     const history_res = await get_cases_history(store.id);
 
@@ -213,7 +264,8 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
       const upload_res = await upload_case_document(
         body.file,
         params.caseId,
-        store.id
+        store.id,
+        body.title
       );
 
       set.status = upload_res.code;
@@ -225,6 +277,7 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
       }),
       body: t.Object({
         file: t.File(),
+        title: t.Optional(t.String()),
       }),
     }
   )
@@ -240,6 +293,29 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
     {
       params: t.Object({
         caseId: t.String({ description: "Case ID to fetch documents for" }),
+      }),
+    }
+  )
+
+  .put(
+    "/documents/:documentId/title",
+    async ({ set, params, body }) => {
+      const update_res = await update_document_title(
+        parseInt(params.documentId),
+        body.title
+      );
+
+      set.status = update_res.code;
+      return update_res;
+    },
+    {
+      params: t.Object({
+        documentId: t.String({
+          description: "Document ID to update title for",
+        }),
+      }),
+      body: t.Object({
+        title: t.String({ description: "New document title" }),
       }),
     }
   );

@@ -13,8 +13,9 @@ import { case_model } from "./case.model";
 
 // Message table definition
 export const media_model = pgTable("media", {
-  id: serial().primaryKey(),
+  id: bigserial({ mode: "number" }).primaryKey(),
   url: text().notNull(),
+  title: varchar({ length: 255 }),
   type: varchar({ length: 50 }).notNull(),
   size: integer().notNull(),
   uploader_id: bigint({ mode: "number" }).references(() => user_model.id, {

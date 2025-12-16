@@ -15,6 +15,7 @@ import chat_routes from "./routes/shared/chat.routes";
 import user_routes from "./routes/shared/user.routes";
 import lawyer_internship_routes from "./routes/lawyer/internship.routes";
 import appointment_routes from "./routes/lawyer/appointments.routes";
+import google_calendar_routes from "./routes/lawyer/google-calendar.routes";
 import internship_applications_routes from "./routes/lawyer/internship-applications.routes";
 import role_management_routes from "./routes/lawyer/role-management.routes";
 import research_routes from "./routes/shared/research.routes";
@@ -49,6 +50,7 @@ const app = new Elysia()
       .use(internship_routes)
       .use(lawyer_internship_routes)
       .use(appointment_routes)
+      .use(google_calendar_routes)
       .use(internship_applications_routes)
       .use(role_management_routes)
       // .use(research_routes)

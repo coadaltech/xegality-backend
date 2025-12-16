@@ -411,6 +411,22 @@ export const get_student_internships_by_status = async (
             )
           );
         break;
+      case "selected":
+        // Get internships where student's application was rejected
+        internships = await db
+          .select()
+          .from(internship_model)
+          .innerJoin(
+            applied_internship_model,
+            eq(internship_model.id, applied_internship_model.internship_id)
+          )
+          .where(
+            and(
+              eq(applied_internship_model.student_id, student_id),
+              eq(applied_internship_model.status, "selected")
+            )
+          );
+        break;
 
       default:
         return {
