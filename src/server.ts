@@ -34,7 +34,11 @@ if (!SERVER_PORT) {
   throw new Error("SERVER_PORT environment variable is not set");
 }
 
-const app = new Elysia()
+const app = new Elysia({
+  serve: {
+    idleTimeout: 60
+  }
+})
   .use(cors({ origin: process.env.FRONTEND_URL, credentials: true }))
   .use(static_routes)
   .group("/api", (app) =>
@@ -53,7 +57,7 @@ const app = new Elysia()
       .use(google_calendar_routes)
       .use(internship_applications_routes)
       .use(role_management_routes)
-      // .use(research_routes)
+      .use(research_routes)
       .use(payment_routes)
       .use(subscriptionRoutes)
       .use(adminSubscriptionRoutes)

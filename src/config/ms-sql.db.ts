@@ -14,12 +14,29 @@ const pool = new sql.ConnectionPool({
   },
 });
 
+// const pool = new sql.ConnectionPool({
+//   user: "coadal",
+//   password: "Aman5105",
+//   server: "xegalitydbserver.database.windows.net",
+//   database: "xegality_cases",
+//   options: {
+//     encrypt: true,
+//     trustServerCertificate: false,
+//     requestTimeout: 60000, // 1 minutes timeout for large database queries
+//   },
+//   pool: {
+//     max: 10,
+//     min: 0,
+//     idleTimeoutMillis: 30000,
+//   }
+// });
+
 pool
   .connect()
   .then(() => console.log("Connected to SQL Server"))
   .catch((err) => console.error("Connection failed:", err));
 
-// export { pool };
+export { pool };
 
 async function exportToCSV() {
   try {

@@ -126,10 +126,10 @@ export const send_message = async (
 
     const newMessage = await db
       .insert(ai_chat_message_model)
-      .values({ 
-        session_id, 
-        message, 
-        sender, 
+      .values({
+        session_id,
+        message,
+        sender,
         type: type || "text",
         image_urls: image_urls ? JSON.stringify(image_urls) : undefined,
         document_urls: document_urls ? JSON.stringify(document_urls) : undefined
@@ -183,20 +183,20 @@ export const get_ai_response = async (
             parts: [
               {
                 text: `
-You are XEGALITY AI — an AI Lawyer Assistant.
+                  You are XEGALITY AI — an AI Lawyer Assistant.
 
-Guidelines:
-• Provide general legal information, not legal advice.
-• Only answer for legal queries.
-• Use simple, clear language.
-• Avoid jargon and technical terms.
-• Ask follow-up questions if needed,
-• Provide legal advice only if asked for.
-• If the user asks for legal advice, provide legal advice only.
-• Use Indian legal context unless specified otherwise.
-• Be neutral, clear, and professional.
-• Suggest legal options but never guarantee outcomes.
-• Ask clarification if the user question is incomplete.
+                  Guidelines:
+                  • Provide general legal information, not legal advice.
+                  • Only answer for legal queries.
+                  • Use simple, clear language.
+                  • Avoid jargon and technical terms.
+                  • Ask follow-up questions if needed,
+                  • Provide legal advice only if asked for.
+                  • If the user asks for legal advice, provide legal advice only.
+                  • Use Indian legal context unless specified otherwise.
+                  • Be neutral, clear, and professional.
+                  • Suggest legal options but never guarantee outcomes.
+                  • Ask clarification if the user question is incomplete.
                 `.trim(),
               },
             ],
@@ -212,9 +212,9 @@ Guidelines:
                 { text: user_input },
                 ...(images || []).map((img) => ({
                   inline_data: {
-                    mime_type: img.startsWith('data:image/png') ? 'image/png' : 
-                               img.startsWith('data:image/jpeg') ? 'image/jpeg' : 
-                               img.startsWith('data:image/jpg') ? 'image/jpeg' : 'image/jpeg',
+                    mime_type: img.startsWith('data:image/png') ? 'image/png' :
+                      img.startsWith('data:image/jpeg') ? 'image/jpeg' :
+                        img.startsWith('data:image/jpg') ? 'image/jpeg' : 'image/jpeg',
                     data: img.split(',')[1]
                   }
                 })),

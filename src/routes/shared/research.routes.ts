@@ -1,6 +1,7 @@
 import Elysia, { t } from "elysia";
 import { app_middleware } from "../../middlewares";
 import { ResearchService } from "../../services/research.service";
+import { pool } from "../../config/ms-sql.db";
 
 const research_routes = new Elysia({ prefix: "/shared" })
   .state({ id: 0, role: "" })
@@ -20,7 +21,7 @@ const research_routes = new Elysia({ prefix: "/shared" })
     async ({ set, store, query }) => {
       try {
         const { query: searchQuery, searchType, court, year, limit, offset } = query;
-        
+
         const result = await ResearchService.searchCases({
           query: searchQuery,
           searchType: searchType || "judgement",
@@ -59,7 +60,7 @@ const research_routes = new Elysia({ prefix: "/shared" })
       try {
         const { keycode } = params;
         const caseData = await ResearchService.getCaseById(parseInt(keycode));
-        
+
         if (!caseData) {
           set.status = 404;
           return {
@@ -91,6 +92,25 @@ const research_routes = new Elysia({ prefix: "/shared" })
     async ({ set, store }) => {
       try {
         const courts = await ResearchService.getCourts();
+        return {
+          success: true,
+          data: courts,
+        };
+      } catch (error) {
+        set.status = 500;
+        return {
+          success: false,
+          error: "Failed to get courts list",
+        };
+      }
+    }
+  )
+
+  .get("/test-sql",
+    async ({ set, store }) => {
+      try {
+        const courts = await pool.request().query("SELECT Judges, Advocates FROM citation WHERE Judges like '%fazal%'");
+        set.status = 200;
         return {
           success: true,
           data: courts,

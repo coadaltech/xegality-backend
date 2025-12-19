@@ -17,6 +17,7 @@
     "@types/puppeteer": "^7.0.4",
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.5.0",
+    "drizzle": "^1.4.0",
     "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.44.2",
     "elysia": "latest",

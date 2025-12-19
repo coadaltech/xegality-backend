@@ -77,14 +77,15 @@ export class ResearchService {
 
       // Get paginated results
       const searchQuery = `
-        SELECT TOP ${limit} 
-          Keycode, COURT, Judges, Bench, CourtBench, CaseNo, Appellant, Respondent, 
-          Date, Advocates, Headnote, HNote, CasesReferred, Judgement, PreviousCourt, 
+        SELECT
+          Keycode, COURT, Judges, Bench, CourtBench, CaseNo, Appellant, Respondent,
+          Date, Advocates, Headnote, HNote, CasesReferred, Judgement, PreviousCourt,
           year, Result, Fullequivicit, Actreferred, HTMLFormat, mainkey
-        FROM citation 
+        FROM dbo.citation
         WHERE ${whereClause}
         ORDER BY Date DESC
         OFFSET ${offset} ROWS
+        FETCH NEXT ${limit} ROWS ONLY;
       `;
 
       const result = await pool.request().query(searchQuery);

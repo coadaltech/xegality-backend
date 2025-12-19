@@ -224,6 +224,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           return login_response;
         }
       }
+
       if (!body.phone && !body.email) {
         set.status = 400;
         console.log(
@@ -261,7 +262,6 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
         );
       }
-      console.log(`[SERVER]   Update Tokens : ${new Date().toLocaleString()}`);
       set.status = response?.code;
       return response;
     },

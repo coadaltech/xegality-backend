@@ -1,0 +1,16 @@
+### 
+
+GET http://localhost:4000/api/shared/case-search?query=raju&searchType=judges HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTc1Nzg1MTE0NzUyLCJyb2xlIjoibGF3eWVyIiwiaXNfcHJvZmlsZV9jb21wbGV0ZSI6ZmFsc2UsImlhdCI6MTc2NjA0NDM4MywiZXhwIjoxNzY2MTMwNzgzfQ.RHNs1k3wUdwV74sxQ373hY2qaWunZmZspJhKEJrhzkQ
+
+
+### 
+
+GET http://localhost:4000/api/shared/courts HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTc1Nzg1MTE0NzUyLCJyb2xlIjoibGF3eWVyIiwiaXNfcHJvZmlsZV9jb21wbGV0ZSI6ZmFsc2UsImlhdCI6MTc2NjA0NDM4MywiZXhwIjoxNzY2MTMwNzgzfQ.RHNs1k3wUdwV74sxQ373hY2qaWunZmZspJhKEJrhzkQ
+
+
+### 
+
+GET http://localhost:4000/api/shared/test-sql HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OTc1Nzg1MTE0NzUyLCJyb2xlIjoibGF3eWVyIiwiaXNfcHJvZmlsZV9jb21wbGV0ZSI6ZmFsc2UsImlhdCI6MTc2NjA0NDM4MywiZXhwIjoxNzY2MTMwNzgzfQ.RHNs1k3wUdwV74sxQ373hY2qaWunZmZspJhKEJrhzkQ
