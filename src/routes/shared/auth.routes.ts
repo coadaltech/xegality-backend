@@ -382,6 +382,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
     );
     return { link };
   })
+
   .get(
     "/google-callback",
     async ({ query, cookie }) => {
@@ -393,20 +394,10 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         response.data?.refresh_token &&
         response.data?.access_token
       ) {
-        cookie["refresh_token"].set({
-          value: response.data.refresh_token,
-          httpOnly: true,
-          secure: true,
-          maxAge: 60 * 60 * 24 * 7,
-          path: "/",
-        });
-        cookie["access_token"].set({
-          value: response.data.access_token,
-          httpOnly: true,
-          secure: true,
-          maxAge: 60 * 60 * 24,
-          path: "/",
-        });
+
+        // Set auth cookies like signup endpoint
+        set_auth_cookies(cookie, response.data.access_token, response.data.refresh_token)
+
         console.log(
           `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
         );

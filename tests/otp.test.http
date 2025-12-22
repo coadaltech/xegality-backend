@@ -68,3 +68,17 @@ Content-Type: application/json
   "password": "password123",
   "role": "student"
 }
+
+
+### 
+
+POST https://api.xegality.com/api/auth/verify-signup-otp HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "student19@gmail.com",
+  "name": "student",
+  "otp": 1234,
+  "password": "password123",
+  "role": "student"
+}

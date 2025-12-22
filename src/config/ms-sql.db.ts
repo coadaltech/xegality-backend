@@ -31,12 +31,53 @@ const pool = new sql.ConnectionPool({
   }
 });
 
-pool
-  .connect()
-  .then(() => console.log("Connected to SQL Server"))
-  .catch((err) => console.error("Connection failed:", err));
+// Lazy connection - only connect when actually needed
+let isConnected = false;
+let connectionPromise: Promise<void> | null = null;
 
-export { pool };
+async function ensureConnected(): Promise<void> {
+  // Check if already connected
+  if (isConnected && pool.connected) {
+    return;
+  }
+
+  // If connection is in progress, wait for it
+  if (connectionPromise) {
+    try {
+      await connectionPromise;
+      if (isConnected && pool.connected) {
+        return;
+      }
+    } catch {
+      // Connection failed, reset and try again below
+      connectionPromise = null;
+    }
+  }
+
+  // Attempt to connect
+  connectionPromise = pool
+    .connect()
+    .then(() => {
+      isConnected = true;
+      console.log("Connected to SQL Server");
+    })
+    .catch((err) => {
+      isConnected = false;
+      connectionPromise = null;
+      console.error("SQL Server connection failed:", err.message);
+      throw new Error(`Failed to connect to SQL Server: ${err.message}`);
+    });
+
+  return connectionPromise;
+}
+
+// Attempt to connect on module load, but don't block if it fails
+ensureConnected().catch(() => {
+  // Silently handle - connection will be retried when actually needed
+  console.warn("SQL Server connection not available at startup. Will retry when needed.");
+});
+
+export { pool, ensureConnected };
 
 async function exportToCSV() {
   try {

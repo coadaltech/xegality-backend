@@ -1,7 +1,7 @@
 import Elysia, { t } from "elysia";
 import { app_middleware } from "../../middlewares";
 import { ResearchService } from "../../services/research.service";
-import { pool } from "../../config/ms-sql.db";
+import { pool, ensureConnected } from "../../config/ms-sql.db";
 
 const research_routes = new Elysia({ prefix: "/shared" })
   .state({ id: 0, role: "" })
@@ -109,6 +109,7 @@ const research_routes = new Elysia({ prefix: "/shared" })
   .get("/test-sql",
     async ({ set, store }) => {
       try {
+        await ensureConnected();
         const courts = await pool.request().query("SELECT Judges, Advocates FROM citation WHERE Judges like '%fazal%'");
         set.status = 200;
         return {

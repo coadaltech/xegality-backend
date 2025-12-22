@@ -1,4 +1,4 @@
-import { pool } from "../config/ms-sql.db";
+import { pool, ensureConnected } from "../config/ms-sql.db";
 
 export interface CaseSearchResult {
   keycode: number;
@@ -42,6 +42,7 @@ export class ResearchService {
     total: number;
   }> {
     try {
+      await ensureConnected();
       const { query, searchType = "judgement", court, year, limit = 20, offset = 0 } = params;
 
       // Map search types to database columns
@@ -126,6 +127,7 @@ export class ResearchService {
    */
   static async getCaseById(keycode: number): Promise<CaseSearchResult | null> {
     try {
+      await ensureConnected();
       const query = `
         SELECT 
           Keycode, COURT, Judges, Bench, CourtBench, CaseNo, Appellant, Respondent, 
@@ -176,6 +178,7 @@ export class ResearchService {
    */
   static async getCourts(): Promise<string[]> {
     try {
+      await ensureConnected();
       const query = `
         SELECT DISTINCT COURT 
         FROM citation 
@@ -196,6 +199,7 @@ export class ResearchService {
    */
   static async getYears(): Promise<number[]> {
     try {
+      await ensureConnected();
       const query = `
         SELECT DISTINCT year 
         FROM citation 
