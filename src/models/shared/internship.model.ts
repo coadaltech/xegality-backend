@@ -3,14 +3,13 @@ import {
   bigserial,
   date,
   pgTable,
-  serial,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 import { user_model } from "./user.model";
 
 export const applied_internship_model = pgTable("applied_internships", {
-  id: serial().primaryKey().notNull(),
+  id: bigserial({ mode: "number" }).primaryKey().notNull(),
   internship_id: bigint({ mode: "number" })
     .notNull()
     .references(() => internship_model.id),
