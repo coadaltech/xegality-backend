@@ -2,34 +2,34 @@ import sql from "mssql";
 import { Parser } from "json2csv";
 import fs from "fs";
 
-const pool = new sql.ConnectionPool({
-  user: "xegality",
-  password: "xegality",
-  server: "172.24.132.187", // LAN IP of Windows machine
-  port: 1433, // ensure same as configured
-  database: "Data_AC",
-  options: {
-    encrypt: false, // set true if using SSL
-    trustServerCertificate: true,
-  },
-});
-
 // const pool = new sql.ConnectionPool({
-//   user: "coadal",
-//   password: "Aman5105",
-//   server: "xegalitydbserver.database.windows.net",
-//   database: "xegality_cases",
+//   user: "xegality",
+//   password: "xegality",
+//   server: "172.24.132.187", // LAN IP of Windows machine
+//   port: 1433, // ensure same as configured
+//   database: "Data_AC",
 //   options: {
-//     encrypt: true,
-//     trustServerCertificate: false,
-//     requestTimeout: 60000, // 1 minutes timeout for large database queries
+//     encrypt: false, // set true if using SSL
+//     trustServerCertificate: true,
 //   },
-//   pool: {
-//     max: 10,
-//     min: 0,
-//     idleTimeoutMillis: 30000,
-//   }
 // });
+
+const pool = new sql.ConnectionPool({
+  user: "coadal",
+  password: "Aman5105",
+  server: "xegalitydbserver.database.windows.net",
+  database: "xegality_cases",
+  options: {
+    encrypt: true,
+    trustServerCertificate: false,
+    requestTimeout: 60000, // 1 minutes timeout for large database queries
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000,
+  }
+});
 
 pool
   .connect()
