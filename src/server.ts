@@ -42,7 +42,7 @@ const app = new Elysia({
   }
 })
   .use(cors({
-    origin: [FRONTEND_URL, "https://main.dctpgzcrrs0wn.amplifyapp.com"],
+    origin: [FRONTEND_URL, "main.dctpgzcrrs0wn.amplifyapp.com"],
     credentials: true
   }))
   .use(static_routes)
