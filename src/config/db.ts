@@ -4,37 +4,45 @@ import postgres from "postgres";
 
 const db_connect = () => {
   try {
-    if (
-      !process.env.DB_HOST &&
-      !process.env.DB_PORT &&
-      !process.env.DB_NAME &&
-      !process.env.DB_USER &&
-      !process.env.DB_PASSWORD
-    ) {
-      console.warn(
-        "WARNING: DB_HOST & PORT environment variables are not defined, continuing with default values. (localhost & 5432)"
-      );
-    }
-    const client = postgres({
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      username: process.env.DB_USER,
-      port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
-      password: process.env.DB_PASSWORD,
-      ssl: process.env.DB_HOST?.includes('neon.tech') ? 'require' : false,
-      debug: function (_, query) {
-        console.log(
-          `[DATABASE] QUERY EXECUTED : ${new Date().toLocaleString()}`
-        );
-      },
-    });
+    // if (
+    //   !process.env.DB_HOST &&
+    //   !process.env.DB_PORT &&
+    //   !process.env.DB_NAME &&
+    //   !process.env.DB_USER &&
+    //   !process.env.DB_PASSWORD
+    // ) {
+    //   console.warn(
+    //     "WARNING: DB_HOST & PORT environment variables are not defined, continuing with default values. (localhost & 5432)"
+    //   );
+    // }
+    // const client = postgres({
+    //   host: process.env.DB_HOST,
+    //   database: process.env.DB_NAME,
+    //   username: process.env.DB_USER,
+    //   port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 5432,
+    //   password: process.env.DB_PASSWORD,
+    //   ssl: process.env.DB_HOST?.includes('neon.tech') ? 'require' : false,
+    //   debug: function (_, query) {
+    //     console.log(
+    //       `[DATABASE] QUERY EXECUTED : ${new Date().toLocaleString()}`
+    //     );
+    //   },
+    // });
+    //
+    // const db = drizzle({ client: client });
+    // console.log(
+    //   `[DATABASE] -> http://localhost:${
+    //     process.env.DB_PORT
+    //   } ${new Date().toLocaleString()}`
+    // );
 
-    const db = drizzle({ client: client });
-    console.log(
-      `[DATABASE] -> http://localhost:${
-        process.env.DB_PORT
-      } ${new Date().toLocaleString()}`
-    );
+    if (!process.env.DB_URL) {
+      throw new Error("DATABASE_URL is not defined in environment variables");
+    }
+
+    const db = drizzle(process.env.DB_URL);
+    console.log(`[DATABASE] -> Connected `);
+
     return db;
   } catch (error) {
     console.error(error);
