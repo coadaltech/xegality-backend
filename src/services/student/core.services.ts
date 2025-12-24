@@ -179,4 +179,70 @@ const update_student_profile = async (
   }
 };
 
-export { update_student_profile, get_student_profile };
+const get_public_student_profile = async (id: number) => {
+  const userColumns = getTableColumns(user_model);
+  const studentColumns = getTableColumns(student_profile_model);
+
+  // Only expose safe public columns
+  const {
+    id: userId,
+    role,
+    created_at,
+    refresh_token,
+    hashed_password,
+    phone,
+    email,
+    isdeleted,
+    is_profile_complete,
+    ...safeUserColumns
+  } = userColumns;
+
+  const { id: studentId, home_address, ...safeStudentColumns } = studentColumns;
+
+  try {
+    const result = await db
+      .select({
+        ...safeUserColumns,
+        ...safeStudentColumns,
+      })
+      .from(user_model)
+      .leftJoin(
+        student_profile_model,
+        eq(user_model.id, student_profile_model.id)
+      )
+      .where(
+        and(
+          eq(user_model.id, id),
+          eq(user_model.isdeleted, false),
+          eq(user_model.is_profile_complete, true)
+        )
+      )
+      .limit(1);
+
+    if (result.length === 0) {
+      return {
+        success: false,
+        code: 404,
+        message: "Student profile not found",
+      };
+    }
+
+    const profile = result[0];
+
+    return {
+      success: true,
+      code: 200,
+      message: "Student profile fetched successfully",
+      data: profile,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      code: 500,
+      message: "ERROR get_public_student_profile",
+      error,
+    };
+  }
+};
+
+export { update_student_profile, get_student_profile, get_public_student_profile };

@@ -3,6 +3,7 @@ import { app_middleware } from "../../middlewares";
 import { StudentProfileSchema } from "@/types/student.types";
 import {
   get_student_profile,
+  get_public_student_profile,
   update_student_profile,
 } from "@/services/student/core.services";
 import {
@@ -11,6 +12,25 @@ import {
 } from "@/services/shared/auth.service";
 
 const student_core_routes = new Elysia({ prefix: "/student" })
+  // Public route - no authentication required
+  .get(
+    "/profile/:id",
+    async ({ params, set }) => {
+      const id = parseInt(params.id);
+      if (isNaN(id)) {
+        set.status = 400;
+        return { success: false, message: "Invalid student ID" };
+      }
+      const profile_result = await get_public_student_profile(id);
+      set.status = profile_result.code;
+      return profile_result;
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+    }
+  )
   .state({ id: 0, role: "" })
   .guard({
     beforeHandle({ cookie, set, store, headers }) {

@@ -30,16 +30,21 @@ import { uploadRoutes } from "./routes/shared/upload.routes";
 import ai_chat_routes from "./routes/ai/ai-chats.routes";
 
 const SERVER_PORT = process.env.SERVER_PORT;
-if (!SERVER_PORT) {
+const FRONTEND_URL = process.env.FRONTEND_URL;
+if (!SERVER_PORT || !FRONTEND_URL) {
   throw new Error("SERVER_PORT environment variable is not set");
 }
+
 
 const app = new Elysia({
   serve: {
     idleTimeout: 60
   }
 })
-  .use(cors({ origin: process.env.FRONTEND_URL, credentials: true }))
+  .use(cors({
+    origin: [FRONTEND_URL, "https://main.dctpgzcrrs0wn.amplifyapp.com"],
+    credentials: true
+  }))
   .use(static_routes)
   .group("/api", (app) =>
     app
