@@ -210,4 +210,6 @@ const web_socket = new Elysia()
   })
   .listen(4001);
 
+console.log(`[WEBSOCKET] -> ws://localhost:${web_socket.server?.port}/chat`);
+
 export default web_socket;

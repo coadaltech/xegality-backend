@@ -30,7 +30,8 @@ import { uploadRoutes } from "./routes/shared/upload.routes";
 import ai_chat_routes from "./routes/ai/ai-chats.routes";
 
 const SERVER_PORT = process.env.SERVER_PORT;
-if (!SERVER_PORT) {
+const FRONTEND_URL = process.env.FRONTEND_URL;
+if (!SERVER_PORT || !FRONTEND_URL) {
   throw new Error("SERVER_PORT environment variable is not set");
 }
 
@@ -39,7 +40,7 @@ const app = new Elysia({
     idleTimeout: 60
   }
 })
-  .use(cors({ origin: process.env.FRONTEND_URL, credentials: true }))
+  .use(cors({ origin: ["http://localhost:3000", "https://xegality.com", "https://www.xegality.com"], credentials: true }))
   .use(static_routes)
   .group("/api", (app) =>
     app
