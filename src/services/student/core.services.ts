@@ -44,6 +44,7 @@ const get_student_profile = async (id: number) => {
     }
 
     const profile = result[0];
+    console.log("profile -> ", profile)
 
     return {
       success: true,
@@ -84,27 +85,81 @@ const update_student_profile = async (
     }
 
     const refined_profile = undefinedToNull(profile);
+    
+    // Build update object - only include fields that are explicitly provided (not undefined)
+    const updateData: any = {};
+    
+    // Required fields - always update if provided
+    if (refined_profile.gender !== undefined && refined_profile.gender !== null) {
+      updateData.gender = refined_profile.gender;
+    }
+    if (refined_profile.age !== undefined && refined_profile.age !== null) {
+      updateData.age = refined_profile.age;
+    }
+    if (refined_profile.languages !== undefined && refined_profile.languages !== null) {
+      updateData.languages = refined_profile.languages;
+    }
+    if (refined_profile.university_name !== undefined && refined_profile.university_name !== null) {
+      updateData.university_name = refined_profile.university_name;
+    }
+    if (refined_profile.practice_area_interests !== undefined && refined_profile.practice_area_interests !== null) {
+      updateData.practice_area_interests = refined_profile.practice_area_interests;
+    }
+    
+    // Optional fields - only update if explicitly provided in the request
+    if (profile.home_address !== undefined) {
+      updateData.home_address = refined_profile.home_address;
+    }
+    if (profile.profile_picture !== undefined) {
+      // If empty string, set to null to clear. Otherwise use the provided value.
+      updateData.profile_picture = profile.profile_picture && profile.profile_picture.trim() !== "" 
+        ? profile.profile_picture 
+        : null;
+    }
+    if (profile.cover_image !== undefined) {
+      // If empty string, set to null to clear. Otherwise use the provided value.
+      updateData.cover_image = profile.cover_image && profile.cover_image.trim() !== "" 
+        ? refined_profile.cover_image 
+        : null;
+    }
+    if (profile.profile_headline !== undefined) {
+      updateData.profile_headline = refined_profile.profile_headline;
+    }
+    if (profile.bio !== undefined) {
+      updateData.bio = refined_profile.bio;
+    }
+    if (profile.degree !== undefined) {
+      updateData.degree = refined_profile.degree;
+    }
+    if (profile.grades !== undefined) {
+      updateData.grades = refined_profile.grades;
+    }
+    if (profile.passing_year !== undefined) {
+      updateData.passing_year = refined_profile.passing_year;
+    }
+    if (profile.prior_internships !== undefined) {
+      updateData.prior_internships = refined_profile.prior_internships;
+    }
+    if (profile.cv_resume !== undefined) {
+      updateData.cv_resume = refined_profile.cv_resume;
+    }
+    if (profile.linkedin_url !== undefined) {
+      updateData.linkedin_url = refined_profile.linkedin_url;
+    }
+    if (profile.availability !== undefined) {
+      updateData.availability = refined_profile.availability;
+    }
+    if (profile.preferred_locations !== undefined) {
+      updateData.preferred_locations = refined_profile.preferred_locations;
+    }
+    if (profile.remote_ok !== undefined) {
+      updateData.remote_ok = refined_profile.remote_ok;
+    }
+    
     // Attempt update
     const update_result = await db
       .update(student_profile_model)
-      .set({
-        gender: refined_profile.gender,
-        age: refined_profile.age,
-        home_address: refined_profile.home_address,
-        languages: refined_profile.languages,
-        profile_picture: profile.profile_picture,
-        university_name: refined_profile.university_name,
-        degree: refined_profile.degree,
-        grades: refined_profile.grades,
-        passing_year: refined_profile.passing_year,
-        practice_area_interests: refined_profile.practice_area_interests,
-        prior_internships: refined_profile.prior_internships,
-        cv_resume: refined_profile.cv_resume,
-        linkedin_url: refined_profile.linkedin_url,
-        availability: refined_profile.availability,
-        preferred_locations: refined_profile.preferred_locations,
-        remote_ok: refined_profile.remote_ok,
-      })
+      .set(updateData)
       .where(eq(student_profile_model.id, id))
       .returning();
 
@@ -143,6 +198,9 @@ const update_student_profile = async (
         home_address: profile.home_address,
         languages: profile.languages,
         profile_picture: profile.profile_picture,
+        cover_image: profile.cover_image,
+        profile_headline: profile.profile_headline,
+        bio: profile.bio,
         university_name: profile.university_name,
         degree: profile.degree,
         grades: profile.grades,

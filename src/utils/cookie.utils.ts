@@ -10,7 +10,7 @@ export const set_auth_cookies = (
     sameSite: "none",
     maxAge: 60 * 60 * 24 * 7,
     path: "/",
-    domain: ".xegality.com",
+    // domain: ".xegality.com",
   });
   cookie["access_token"].set({
     value: access_token,
@@ -19,7 +19,7 @@ export const set_auth_cookies = (
     maxAge: 60 * 60 * 24,
     path: "/",
     sameSite: "none",
-    domain: ".xegality.com",
+    // domain: ".xegality.com",
   });
 };
 
@@ -31,7 +31,7 @@ export const clear_auth_cookies = (cookie: any) => {
     maxAge: 0,
     path: "/",
     sameSite: "none",
-    domain: ".xegality.com",
+    // domain: ".xegality.com",
   });
   cookie["access_token"].set({
     value: "",
@@ -40,6 +40,6 @@ export const clear_auth_cookies = (cookie: any) => {
     maxAge: 0,
     path: "/",
     sameSite: "none",
-    domain: ".xegality.com",
+    // domain: ".xegality.com",
   });
 };

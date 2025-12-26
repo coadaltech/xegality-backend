@@ -26,6 +26,9 @@ const student_profile_model = pgTable("students", {
   home_address: text(),
   languages: varchar({ enum: LANGUAGES_CONST }).array().notNull(),
   profile_picture: text(),
+  cover_image: text(),
+  profile_headline: text(),
+  bio: text(),
 
   // Academic
   university_name: varchar().notNull(),

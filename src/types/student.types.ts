@@ -9,6 +9,9 @@ const StudentProfileSchema = t.Object({
   home_address: t.Optional(t.String()),
   languages: t.Optional(t.Array(t.Enum(Object.fromEntries(LANGUAGES_CONST.map(x => [x, x]))))),
   profile_picture: t.Optional(t.String()),
+  cover_image: t.Optional(t.String()),
+  profile_headline: t.Optional(t.String()),
+  bio: t.Optional(t.String()),
 
   // Academic
   university_name: t.Optional(t.String()),

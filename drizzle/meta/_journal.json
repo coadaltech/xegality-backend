@@ -8,6 +8,13 @@
       "when": 1765881681316,
       "tag": "0000_huge_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1766673755744,
+      "tag": "0001_mighty_captain_flint",
+      "breakpoints": true
     }
   ]
 }
