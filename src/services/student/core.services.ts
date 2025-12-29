@@ -44,7 +44,6 @@ const get_student_profile = async (id: number) => {
     }
 
     const profile = result[0];
-    console.log("profile -> ", profile)
 
     return {
       success: true,
@@ -85,42 +84,57 @@ const update_student_profile = async (
     }
 
     const refined_profile = undefinedToNull(profile);
-    
+
     // Build update object - only include fields that are explicitly provided (not undefined)
     const updateData: any = {};
-    
+
     // Required fields - always update if provided
-    if (refined_profile.gender !== undefined && refined_profile.gender !== null) {
+    if (
+      refined_profile.gender !== undefined &&
+      refined_profile.gender !== null
+    ) {
       updateData.gender = refined_profile.gender;
     }
     if (refined_profile.age !== undefined && refined_profile.age !== null) {
       updateData.age = refined_profile.age;
     }
-    if (refined_profile.languages !== undefined && refined_profile.languages !== null) {
+    if (
+      refined_profile.languages !== undefined &&
+      refined_profile.languages !== null
+    ) {
       updateData.languages = refined_profile.languages;
     }
-    if (refined_profile.university_name !== undefined && refined_profile.university_name !== null) {
+    if (
+      refined_profile.university_name !== undefined &&
+      refined_profile.university_name !== null
+    ) {
       updateData.university_name = refined_profile.university_name;
     }
-    if (refined_profile.practice_area_interests !== undefined && refined_profile.practice_area_interests !== null) {
-      updateData.practice_area_interests = refined_profile.practice_area_interests;
+    if (
+      refined_profile.practice_area_interests !== undefined &&
+      refined_profile.practice_area_interests !== null
+    ) {
+      updateData.practice_area_interests =
+        refined_profile.practice_area_interests;
     }
-    
+
     // Optional fields - only update if explicitly provided in the request
     if (profile.home_address !== undefined) {
       updateData.home_address = refined_profile.home_address;
     }
     if (profile.profile_picture !== undefined) {
       // If empty string, set to null to clear. Otherwise use the provided value.
-      updateData.profile_picture = profile.profile_picture && profile.profile_picture.trim() !== "" 
-        ? profile.profile_picture 
-        : null;
+      updateData.profile_picture =
+        profile.profile_picture && profile.profile_picture.trim() !== ""
+          ? profile.profile_picture
+          : null;
     }
     if (profile.cover_image !== undefined) {
       // If empty string, set to null to clear. Otherwise use the provided value.
-      updateData.cover_image = profile.cover_image && profile.cover_image.trim() !== "" 
-        ? refined_profile.cover_image 
-        : null;
+      updateData.cover_image =
+        profile.cover_image && profile.cover_image.trim() !== ""
+          ? profile.cover_image
+          : null;
     }
     if (profile.profile_headline !== undefined) {
       updateData.profile_headline = refined_profile.profile_headline;
@@ -155,7 +169,7 @@ const update_student_profile = async (
     if (profile.remote_ok !== undefined) {
       updateData.remote_ok = refined_profile.remote_ok;
     }
-    
+
     // Attempt update
     const update_result = await db
       .update(student_profile_model)
@@ -164,11 +178,18 @@ const update_student_profile = async (
       .returning();
 
     if (update_result.length > 0) {
+      // Fetch and return the full profile (with user data) after update
+      const full_profile_result = await get_student_profile(id);
+
+      const response_data = full_profile_result.success
+        ? full_profile_result.data
+        : update_result[0];
+
       return {
         success: true,
         code: 200,
         message: "Student profile updated successfully",
-        data: update_result[0],
+        data: response_data,
       };
     }
 
@@ -303,4 +324,8 @@ const get_public_student_profile = async (id: number) => {
   }
 };
 
-export { update_student_profile, get_student_profile, get_public_student_profile };
+export {
+  update_student_profile,
+  get_student_profile,
+  get_public_student_profile,
+};

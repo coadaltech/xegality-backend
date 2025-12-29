@@ -40,7 +40,7 @@ const app = new Elysia({
     idleTimeout: 60
   }
 })
-  .use(cors({ origin: ["http://localhost:3000", "https://xegality.com", "https://www.xegality.com"], credentials: true }))
+  .use(cors({ origin: ["http://localhost:3002", "https://xegality.com", "https://www.xegality.com"], credentials: true }))
   .use(static_routes)
   .group("/api", (app) =>
     app
