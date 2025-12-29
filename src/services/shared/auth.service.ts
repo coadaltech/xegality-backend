@@ -388,20 +388,20 @@ const otp_cycle = async (value: string | number) => {
     }
 
     // Send SMS with OTP
-    // const message = generateOTPSmsMessage(otp);
-    // const smsResponse = await sendSMS({
-    //   number: value.toString(),
-    //   message,
-    // });
+    const message = generateOTPSmsMessage(otp);
+    const smsResponse = await sendSMS({
+      number: value.toString(),
+      message,
+    });
 
-    // if (!smsResponse.success) {
-    //   console.error("[SMS Service] Failed to send OTP SMS:", smsResponse.error);
-    //   return {
-    //     success: false,
-    //     code: 500,
-    //     message: `Failed to send OTP via SMS: ${smsResponse.error}`,
-    //   };
-    // }
+    if (!smsResponse.success) {
+      console.error("[SMS Service] Failed to send OTP SMS:", smsResponse.error);
+      return {
+        success: false,
+        code: 500,
+        message: `Failed to send OTP via SMS: ${smsResponse.error}`,
+      };
+    }
 
     return {
       success: true,
