@@ -32,7 +32,7 @@ import ai_chat_routes from "./routes/ai/ai-chats.routes";
 const SERVER_PORT = process.env.SERVER_PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 if (!SERVER_PORT || !FRONTEND_URL) {
-  throw new Error("SERVER_PORT environment variable is not set");
+  throw new Error("SERVER_PORT or FRONTEND_URL environment variable is not set");
 }
 
 const app = new Elysia({
