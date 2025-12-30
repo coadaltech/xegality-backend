@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { app_middleware } from "../../middlewares";
+import "dotenv/config";
 import { CaseSchema } from "../../types/case.types";
 import {
   get_case_details,
@@ -230,7 +231,7 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="${pdf_response.filename}"`,
           "Content-Length": pdf_response.data.length.toString(),
-          "access-control-allow-origin": "*",
+          "access-control-allow-origin": process.env.FRONTEND_URL || "",
           "access-control-allow-credentials": "true",
           "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
           "access-control-allow-headers":
