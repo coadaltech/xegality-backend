@@ -1,12 +1,18 @@
 import db from "../../config/db";
 import { subscription_model } from "../../models/shared/subscription.model";
 import { user_model } from "../../models/shared/user.model";
-import { CreateSubscriptionRequest, SUBSCRIPTION_PLANS } from "../../types/subscription.types";
+import {
+  CreateSubscriptionRequest,
+  SUBSCRIPTION_PLANS,
+} from "../../types/subscription.types";
 import { eq, and, desc } from "drizzle-orm";
 
 export class SubscriptionService {
-  static async createSubscription(userId: number, data: CreateSubscriptionRequest) {
-    const plan = SUBSCRIPTION_PLANS.find(p => p.id === data.plan_id);
+  static async createSubscription(
+    userId: number,
+    data: CreateSubscriptionRequest
+  ) {
+    const plan = SUBSCRIPTION_PLANS.find((p) => p.id === data.plan_id);
     if (!plan) {
       throw new Error("Invalid plan ID");
     }
@@ -19,17 +25,20 @@ export class SubscriptionService {
     // Cancel existing active subscription
     await this.cancelActiveSubscription(userId);
 
-    const subscription = await db.insert(subscription_model).values({
-      user_id: userId,
-      plan_id: plan.id,
-      plan_name: plan.name,
-      price: plan.price,
-      start_date: startDate,
-      end_date: endDate,
-      payment_method: data.payment_method,
-      transaction_id: data.transaction_id,
-      status: "active"
-    }).returning();
+    const subscription = await db
+      .insert(subscription_model)
+      .values({
+        user_id: userId,
+        plan_id: plan.id,
+        plan_name: plan.name,
+        price: plan.price,
+        start_date: startDate,
+        end_date: endDate,
+        payment_method: data.payment_method,
+        transaction_id: data.transaction_id,
+        status: "active",
+      })
+      .returning();
 
     return subscription[0];
   }
@@ -38,10 +47,12 @@ export class SubscriptionService {
     const subscription = await db
       .select()
       .from(subscription_model)
-      .where(and(
-        eq(subscription_model.user_id, userId),
-        eq(subscription_model.status, "active")
-      ))
+      .where(
+        and(
+          eq(subscription_model.user_id, userId),
+          eq(subscription_model.status, "active")
+        )
+      )
       .orderBy(desc(subscription_model.created_at))
       .limit(1);
 
@@ -51,14 +62,16 @@ export class SubscriptionService {
   static async cancelActiveSubscription(userId: number) {
     await db
       .update(subscription_model)
-      .set({ 
+      .set({
         status: "cancelled",
-        updated_at: new Date()
+        updated_at: new Date(),
       })
-      .where(and(
-        eq(subscription_model.user_id, userId),
-        eq(subscription_model.status, "active")
-      ));
+      .where(
+        and(
+          eq(subscription_model.user_id, userId),
+          eq(subscription_model.status, "active")
+        )
+      );
   }
 
   static async getSubscriptionHistory(userId: number) {
@@ -73,28 +86,95 @@ export class SubscriptionService {
     const now = new Date();
     await db
       .update(subscription_model)
-      .set({ 
+      .set({
         status: "expired",
-        updated_at: now
+        updated_at: now,
       })
-      .where(and(
-        eq(subscription_model.status, "active"),
-        // end_date < now
-      ));
+      .where(
+        and(
+          eq(subscription_model.status, "active")
+          // end_date < now
+        )
+      );
   }
 
   static getAvailablePlans(userType: "student" | "lawyer") {
-    return SUBSCRIPTION_PLANS.filter(plan => plan.user_type === userType);
+    return SUBSCRIPTION_PLANS.filter((plan) => plan.user_type === userType);
   }
 
-  static hasAccessToPlan(currentPlanId: string, requiredPlanId: string, userType: "student" | "lawyer"): boolean {
-    const planHierarchy = userType === "student" 
-      ? ["basic", "student", "premium"]
-      : ["starter", "professional", "enterprise"];
-    
+  static hasAccessToPlan(
+    currentPlanId: string,
+    requiredPlanId: string,
+    userType: "student" | "lawyer"
+  ): boolean {
+    const planHierarchy =
+      userType === "student"
+        ? ["basic", "student", "premium"]
+        : ["starter", "professional", "enterprise"];
+
     const currentIndex = planHierarchy.indexOf(currentPlanId);
     const requiredIndex = planHierarchy.indexOf(requiredPlanId);
-    
+
     return currentIndex >= requiredIndex;
+  }
+
+  static async calculateSubscriptionAccess(
+    userId: number,
+    userCreatedAt: Date | null
+  ): Promise<{
+    hasAccess: boolean;
+    expiresAt: Date | null;
+  }> {
+    const now = new Date();
+
+    // If created_at is null, treat as new user (shouldn't happen, but handle it)
+    if (!userCreatedAt) {
+      const trialEndDate = new Date(now);
+      trialEndDate.setDate(trialEndDate.getDate() + 7);
+      return {
+        hasAccess: true,
+        expiresAt: trialEndDate,
+      };
+    }
+
+    // Check if within 7-day free trial
+    const signupDate = new Date(userCreatedAt);
+    const daysSinceSignup = Math.floor(
+      (now.getTime() - signupDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    const trialEndDate = new Date(signupDate);
+    trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+    if (daysSinceSignup < 7) {
+      return {
+        hasAccess: true,
+        expiresAt: trialEndDate,
+      };
+    }
+
+    // After trial, check subscription
+    const subscription = await this.getUserSubscription(userId);
+
+    if (!subscription) {
+      return {
+        hasAccess: false,
+        expiresAt: null,
+      };
+    }
+
+    const subscriptionEndDate = new Date(subscription.end_date);
+
+    if (subscriptionEndDate < now) {
+      return {
+        hasAccess: false,
+        expiresAt: subscriptionEndDate,
+      };
+    }
+
+    return {
+      hasAccess: true,
+      expiresAt: subscriptionEndDate,
+    };
   }
 }

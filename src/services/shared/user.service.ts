@@ -11,6 +11,7 @@ import {
 import { consumer_profile_model } from "@/models/consumer/consumer.model";
 import { lawyer_profile_model } from "@/models/lawyer/lawyer.model";
 import { student_profile_model } from "@/models/student/student.model";
+import { SubscriptionService } from "./subscription.service";
 
 export const find_user_by_id = async (id: number) => {
   try {
@@ -100,7 +101,18 @@ export const create_user = async (
 
     const hashed_password = await hash_password(password);
 
-    const access_token = generate_jwt(user_id, role, false);
+    // New user gets 7-day free trial
+    const now = new Date();
+    const trialEndDate = new Date(now);
+    trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+    const access_token = generate_jwt(
+      user_id,
+      role,
+      false, // new user, profile not complete
+      true, // has access (7-day trial)
+      trialEndDate
+    );
     const refresh_token = generate_refresh_jwt(user_id, role);
 
     await db

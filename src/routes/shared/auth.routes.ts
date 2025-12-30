@@ -23,6 +23,7 @@ import { generate_jwt, generate_refresh_jwt } from "@/utils/general.utils";
 import { eq } from "drizzle-orm";
 import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
+import { SubscriptionService } from "../../services/shared/subscription.service";
 
 const auth_routes = new Elysia({ prefix: "/auth" })
   // SIGNUP
@@ -324,10 +325,19 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         };
       }
 
+      // Calculate subscription access
+      const subscriptionAccess =
+        await SubscriptionService.calculateSubscriptionAccess(
+          user.id,
+          user.created_at
+        );
+
       const access_token = generate_jwt(
         user.id,
         user.role,
-        user.is_profile_complete || false
+        user.is_profile_complete || false,
+        subscriptionAccess.hasAccess,
+        subscriptionAccess.expiresAt
       );
       const refresh_token = generate_refresh_jwt(user.id, user.role);
 
@@ -394,9 +404,12 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         response.data?.refresh_token &&
         response.data?.access_token
       ) {
-
         // Set auth cookies like signup endpoint
-        set_auth_cookies(cookie, response.data.access_token, response.data.refresh_token)
+        set_auth_cookies(
+          cookie,
+          response.data.access_token,
+          response.data.refresh_token
+        );
 
         console.log(
           `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`

@@ -36,10 +36,28 @@ const hash_password = async (password: string): Promise<string> => {
   return hashed_password;
 };
 
-const generate_jwt = (id: number, role: string, is_profile_complete?: boolean) => {
-  return jwt.sign({ id, role, is_profile_complete: is_profile_complete || false }, process.env.ACCESS_KEY || "heymama", {
-    expiresIn: "1d",
-  });
+const generate_jwt = (
+  id: number,
+  role: string,
+  is_profile_complete?: boolean,
+  has_subscription_access?: boolean,
+  subscription_expires_at?: Date | null
+) => {
+  return jwt.sign(
+    {
+      id,
+      role,
+      is_profile_complete: is_profile_complete || false,
+      has_subscription_access: has_subscription_access || false,
+      subscription_expires_at: subscription_expires_at
+        ? subscription_expires_at.toISOString()
+        : null,
+    },
+    process.env.ACCESS_KEY || "heymama",
+    {
+      expiresIn: "1d",
+    }
+  );
 };
 
 const verify_jwt = (token: string) => {
@@ -61,36 +79,42 @@ const generate_case_id = (case_type: string) => {
   const currentYear = new Date().getFullYear();
   const randomNumber = Math.floor(Math.random() * 9000) + 1000;
   // Format the case ID as "XX-YYYY-XXXX"
-  const caseId = `${firstTwoChars}-${currentYear}-${randomNumber.toString().padStart(4, '0')}`;
+  const caseId = `${firstTwoChars}-${currentYear}-${randomNumber
+    .toString()
+    .padStart(4, "0")}`;
 
   return caseId;
-}
+};
 
 const format_time_spent = (milliseconds: number) => {
   const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const hours = Math.floor(
+    (milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
 
   return `${days} days ${hours} hours`;
-}
+};
 
 const format_days_since_date = (dateString: string) => {
   const openDate = new Date(dateString);
   const currentDate = new Date();
   const timeDifference = currentDate.getTime() - openDate.getTime();
   const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-  
+
   return `${days} days`;
-}
+};
 
 const generate_application_id = () => {
-  const firstTwoChars = "CA"
+  const firstTwoChars = "CA";
   const currentYear = new Date().getFullYear();
   const randomNumber = Math.floor(Math.random() * 9000) + 1000;
   // Format the case ID as "XX-YYYY-XXXX"
-  const caseId = `${firstTwoChars}-${currentYear}-${randomNumber.toString().padStart(4, '0')}`;
+  const caseId = `${firstTwoChars}-${currentYear}-${randomNumber
+    .toString()
+    .padStart(4, "0")}`;
 
   return caseId;
-}
+};
 
 export {
   random_otp,
@@ -105,5 +129,5 @@ export {
   format_time_spent,
   format_days_since_date,
   generate_case_id,
-  generate_application_id
+  generate_application_id,
 };

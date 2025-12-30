@@ -16,6 +16,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { otp_model } from "../../models/shared/otp.model";
 import { sendSMS, generateOTPSmsMessage } from "./sms.service";
 import { sendOTP as sendEmailOTP } from "../nodemailer";
+import { SubscriptionService } from "./subscription.service";
 
 const handle_login = async (password: string, value: number | string) => {
   try {
@@ -62,10 +63,19 @@ const handle_login = async (password: string, value: number | string) => {
       };
     }
 
+    // Calculate subscription access
+    const subscriptionAccess =
+      await SubscriptionService.calculateSubscriptionAccess(
+        user.id,
+        user.created_at
+      );
+
     const access_token = generate_jwt(
       user.id,
       user.role,
-      user.is_profile_complete || false
+      user.is_profile_complete || false,
+      subscriptionAccess.hasAccess,
+      subscriptionAccess.expiresAt
     );
     const refresh_token = generate_refresh_jwt(user.id, user.role);
 
@@ -101,7 +111,35 @@ const create_tokens = async (
   is_profile_complete: boolean
 ) => {
   try {
-    const new_access_token = generate_jwt(id, role, is_profile_complete);
+    // Get user to check created_at for subscription calculation
+    const user = await db
+      .select({ created_at: user_model.created_at })
+      .from(user_model)
+      .where(eq(user_model.id, id))
+      .then((rows) => rows[0]);
+
+    if (!user) {
+      return {
+        success: false,
+        code: 404,
+        message: "User not found",
+      };
+    }
+
+    // Calculate subscription access
+    const subscriptionAccess =
+      await SubscriptionService.calculateSubscriptionAccess(
+        id,
+        user.created_at
+      );
+
+    const new_access_token = generate_jwt(
+      id,
+      role,
+      is_profile_complete,
+      subscriptionAccess.hasAccess,
+      subscriptionAccess.expiresAt
+    );
     const new_refresh_token = generate_refresh_jwt(id, role);
     await db.update(user_model).set({ refresh_token: new_refresh_token });
     return {
@@ -154,6 +192,7 @@ const verify_token_with_db = async (refresh_token: string) => {
         .select({
           refresh_token: user_model.refresh_token,
           is_profile_complete: user_model.is_profile_complete,
+          created_at: user_model.created_at,
         })
         .from(user_model)
         .where(eq(user_model.id, res.id))
@@ -166,6 +205,14 @@ const verify_token_with_db = async (refresh_token: string) => {
         message: "Refresh Token Expired",
       };
     }
+
+    // Calculate subscription access
+    const subscriptionAccess =
+      await SubscriptionService.calculateSubscriptionAccess(
+        res.id,
+        token_exists.created_at
+      );
+
     return {
       success: true,
       code: 200,
@@ -174,6 +221,8 @@ const verify_token_with_db = async (refresh_token: string) => {
         id: data.payload.id,
         role: data.payload.role,
         is_profile_complete: token_exists.is_profile_complete || false,
+        subscription_access: subscriptionAccess.hasAccess,
+        subscription_expires_at: subscriptionAccess.expiresAt,
       },
     };
   } catch (error) {
@@ -246,11 +295,20 @@ const handle_google_callback = async ({ query, set }: any) => {
 
     // Login
     if (exisiting_user) {
+      // Calculate subscription access
+      const subscriptionAccess =
+        await SubscriptionService.calculateSubscriptionAccess(
+          exisiting_user.id,
+          exisiting_user.created_at
+        );
+
       const refresh_token = generate_refresh_jwt(exisiting_user.id, role);
       const access_token = generate_jwt(
         exisiting_user.id,
         role,
-        exisiting_user.is_profile_complete || false
+        exisiting_user.is_profile_complete || false,
+        subscriptionAccess.hasAccess,
+        subscriptionAccess.expiresAt
       );
       await db
         .update(user_model)
@@ -271,10 +329,20 @@ const handle_google_callback = async ({ query, set }: any) => {
         redirect: `${process.env.FRONTEND_URL}/${role}/dashboard`,
       };
     } else {
-      // Signup
+      // Signup - new user gets 7-day free trial
       const user_id = create_unique_id();
+      const now = new Date();
+      const trialEndDate = new Date(now);
+      trialEndDate.setDate(trialEndDate.getDate() + 7);
+
       const refresh_token = generate_refresh_jwt(user_id, role);
-      const access_token = generate_jwt(user_id, role);
+      const access_token = generate_jwt(
+        user_id,
+        role,
+        false, // new user, profile not complete
+        true, // has access (7-day trial)
+        trialEndDate
+      );
 
       await db.insert(user_model).values({
         id: user_id,
@@ -316,10 +384,27 @@ const handle_login_by_token = async (payload: JwtPayload) => {
       .where(eq(user_model.id, id))
       .then((rows) => rows[0]);
 
+    if (!user) {
+      return {
+        success: false,
+        code: 404,
+        message: "User not found",
+      };
+    }
+
+    // Calculate subscription access
+    const subscriptionAccess =
+      await SubscriptionService.calculateSubscriptionAccess(
+        id,
+        user.created_at
+      );
+
     const access_token = generate_jwt(
       id,
       role,
-      user.is_profile_complete || false
+      user.is_profile_complete || false,
+      subscriptionAccess.hasAccess,
+      subscriptionAccess.expiresAt
     );
     const refresh_token = generate_refresh_jwt(id, role);
 

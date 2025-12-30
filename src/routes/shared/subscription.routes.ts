@@ -2,6 +2,11 @@ import { Elysia, t } from "elysia";
 import { SubscriptionService } from "../../services/shared/subscription.service";
 import { RazorpaySubscriptionService } from "../../services/shared/razorpay-subscription.service";
 import { app_middleware } from "@/middlewares";
+import { generate_jwt } from "@/utils/general.utils";
+import { eq } from "drizzle-orm";
+import db from "../../config/db";
+import { user_model } from "../../models/shared/user.model";
+import { set_auth_cookies } from "@/utils/cookie.utils";
 
 export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
   .state({ id: 0, role: "" })
@@ -82,7 +87,7 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
 
   .post(
     "/verify-payment",
-    async ({ body, store }) => {
+    async ({ body, store, cookie }) => {
       try {
         const subscription =
           await RazorpaySubscriptionService.activateSubscription(
@@ -90,6 +95,42 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
             body,
             null
           );
+
+        // Get user to refresh token with new subscription status
+        const user = await db
+          .select()
+          .from(user_model)
+          .where(eq(user_model.id, store.id))
+          .then((rows) => rows[0]);
+
+        if (user) {
+          const subscriptionAccess =
+            await SubscriptionService.calculateSubscriptionAccess(
+              store.id,
+              user.created_at
+            );
+
+          const new_access_token = generate_jwt(
+            store.id,
+            store.role,
+            user.is_profile_complete || false,
+            subscriptionAccess.hasAccess,
+            subscriptionAccess.expiresAt
+          );
+
+          // Update the access token cookie
+          set_auth_cookies(cookie, new_access_token, user.refresh_token);
+
+          console.log("verify payment", subscription);
+          return {
+            success: true,
+            data: {
+              subscription,
+              new_access_token,
+            },
+            message: "Subscription activated successfully",
+          };
+        }
 
         console.log("verify payment", subscription);
         return {
