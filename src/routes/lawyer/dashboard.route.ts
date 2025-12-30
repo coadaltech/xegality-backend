@@ -230,6 +230,11 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="${pdf_response.filename}"`,
           "Content-Length": pdf_response.data.length.toString(),
+          "access-control-allow-origin": "*",
+          "access-control-allow-credentials": "true",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "access-control-allow-headers":
+            "Content-Type, Authorization, X-Requested-With",
         };
 
         return pdf_response.data;
