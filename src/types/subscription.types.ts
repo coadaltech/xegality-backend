@@ -43,7 +43,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "starter",
     name: "Go Plan",
-    price: 100, // Free plan
+    price: 249900, // Free plan
     duration_months: 1,
     features: ["Up to 25 active cases", "5GB secure cloud storage", "Basic client portal", "Email support", "Mobile app access"],
     user_type: "lawyer"
