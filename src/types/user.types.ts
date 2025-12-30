@@ -103,5 +103,5 @@ export type {
   LanguagesType,
   PracticeAreasType,
   AppointmentStatusType,
-  PaymentStatusType
+  PaymentStatusType,
 }

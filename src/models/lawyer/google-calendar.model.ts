@@ -25,15 +25,9 @@ const google_calendar_tokens_model = pgTable("google_calendar_tokens", {
   updated_at: timestamp().defaultNow(),
 });
 
-type GoogleCalendarTokenType = InferSelectModel<
-  typeof google_calendar_tokens_model
->;
-type InsertGoogleCalendarTokenType = InferInsertModel<
-  typeof google_calendar_tokens_model
->;
-type UpdateGoogleCalendarTokenType = Partial<
-  Omit<InsertGoogleCalendarTokenType, "id" | "lawyer_id">
->;
+type GoogleCalendarTokenType = InferSelectModel<typeof google_calendar_tokens_model>;
+type InsertGoogleCalendarTokenType = InferInsertModel<typeof google_calendar_tokens_model>;
+type UpdateGoogleCalendarTokenType = Partial<Omit<InsertGoogleCalendarTokenType, "id" | "lawyer_id">>;
 
 export { google_calendar_tokens_model };
 export type {
