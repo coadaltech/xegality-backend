@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { app_middleware } from "../../middlewares";
+import "dotenv/config";
 import { CaseSchema } from "../../types/case.types";
 import {
   get_case_details,
@@ -224,16 +225,17 @@ const lawyer_dashboard_routes = new Elysia({ prefix: "/lawyer/dashboard" })
       const pdf_response = await generateInvoicePDF(params.invoiceNumber);
 
       if (pdf_response.success && pdf_response.data) {
-        // Set headers for PDF download with CORS
+        // Set headers for PDF download
+        // CORS is handled by the global middleware in server.ts
         set.headers = {
           "Content-Type": "application/pdf",
           "Content-Disposition": `attachment; filename="${pdf_response.filename}"`,
           "Content-Length": pdf_response.data.length.toString(),
-          "Access-Control-Allow-Origin":
-            process.env.FRONTEND_URL || "http://localhost:3000",
-          "Access-Control-Allow-Credentials": "true",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "access-control-allow-origin": process.env.FRONTEND_URL || "",
+          "access-control-allow-credentials": "true",
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "access-control-allow-headers":
+            "Content-Type, Authorization, X-Requested-With",
         };
 
         return pdf_response.data;

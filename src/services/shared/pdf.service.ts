@@ -5,6 +5,15 @@ import { lawyer_invoice_model } from "../../models/lawyer/payments.model";
 import { user_model } from "../../models/shared/user.model";
 import { eq } from "drizzle-orm";
 
+// Extend jsPDF type to include lastAutoTable from jspdf-autotable
+declare module "jspdf" {
+  interface jsPDF {
+    lastAutoTable?: {
+      finalY: number;
+    };
+  }
+}
+
 interface InvoiceItem {
   title: string;
   quantity: number;
@@ -141,7 +150,7 @@ const generateInvoicePDF = async (invoiceId: string) => {
       },
     });
 
-    const afterTableY = doc.lastAutoTable.finalY + 20;
+    const afterTableY = (doc.lastAutoTable?.finalY ?? cursorY) + 20;
 
     // -----------------------------------
     // TOTAL SECTION (clean & right aligned)
@@ -186,6 +195,7 @@ const generateInvoicePDF = async (invoiceId: string) => {
       data: pdfBuffer,
       filename: `invoice-${data.invoice_number}.pdf`,
     };
+
   } catch (error: any) {
     console.error("PDF Error:", error);
     return {
