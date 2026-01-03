@@ -1,4 +1,4 @@
-import { pool, ensureConnected } from "../config/ms-sql.db";
+import { pool, ensureConnected, executeQuery } from "../config/ms-sql.db";
 
 export interface CaseSearchResult {
   keycode: number;
@@ -73,7 +73,7 @@ export class ResearchService {
 
       // Get total count
       const countQuery = `SELECT COUNT(*) as total FROM citation WHERE ${whereClause}`;
-      const countResult = await pool.request().query(countQuery);
+      const countResult = await executeQuery<{ total: number }>(countQuery);
       const total = countResult.recordset[0].total;
 
       // Get paginated results
@@ -89,7 +89,7 @@ export class ResearchService {
         FETCH NEXT ${limit} ROWS ONLY;
       `;
 
-      const result = await pool.request().query(searchQuery);
+      const result = await executeQuery(searchQuery);
 
       const cases: CaseSearchResult[] = result.recordset.map((row: any) => ({
         keycode: row.Keycode,
@@ -137,7 +137,7 @@ export class ResearchService {
         WHERE Keycode = ${keycode}
       `;
 
-      const result = await pool.request().query(query);
+      const result = await executeQuery(query);
 
       if (result.recordset.length === 0) {
         return null;
@@ -186,7 +186,7 @@ export class ResearchService {
         ORDER BY COURT
       `;
 
-      const result = await pool.request().query(query);
+      const result = await executeQuery(query);
       return result.recordset.map((row: any) => row.COURT);
     } catch (error) {
       console.error("Error getting courts:", error);
@@ -207,7 +207,7 @@ export class ResearchService {
         ORDER BY year DESC
       `;
 
-      const result = await pool.request().query(query);
+      const result = await executeQuery(query);
       return result.recordset.map((row: any) => row.year);
     } catch (error) {
       console.error("Error getting years:", error);
