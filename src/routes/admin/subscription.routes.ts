@@ -9,6 +9,7 @@ export const adminSubscriptionRoutes = new Elysia({
   prefix: "/admin/subscriptions",
 })
   .state({ id: 0, role: "" })
+
   .guard({
     beforeHandle({ cookie, set, store, headers }) {
       const state_result = app_middleware({ cookie, headers });
@@ -25,6 +26,7 @@ export const adminSubscriptionRoutes = new Elysia({
       store.role = state_result.data.role;
     },
   })
+
   .get("/", async () => {
     try {
       const subscriptions = await db

@@ -15,11 +15,6 @@ import { RoleType } from "@/types/user.types";
 
 const get_applications_list = async (id: number, role: RoleType) => {
   try {
-    console.log("user role", role);
-
-    const result = await db.select().from(application_model);
-
-    console.log("my result", result);
     const db_result = await db
       .select({
         id: application_model.id,
@@ -31,14 +26,12 @@ const get_applications_list = async (id: number, role: RoleType) => {
       .from(application_model)
       .where(
         eq(
-          role === "ca"
+          role === "ca" || role === "admin"
             ? application_model.handled_by
             : application_model.consumer_id,
           id
         )
       );
-
-    console.log("db result", db_result);
 
     if (db_result.length === 0) {
       return {

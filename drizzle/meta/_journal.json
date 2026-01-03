@@ -15,6 +15,41 @@
       "when": 1766673755744,
       "tag": "0001_mighty_captain_flint",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767173024086,
+      "tag": "0002_tan_the_hood",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1767179243261,
+      "tag": "0003_great_lilandra",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1767185000709,
+      "tag": "0004_red_toxin",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1767338606524,
+      "tag": "0005_condemned_darwin",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1767434415946,
+      "tag": "0006_ambiguous_red_ghost",
+      "breakpoints": true
     }
   ]
 }

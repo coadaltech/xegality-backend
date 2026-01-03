@@ -1,7 +1,6 @@
 import { t, Static } from "elysia";
 import { GENDER_CONST, GenderType, LANGUAGES_CONST, LanguagesType, LAWYER_FEE_CONST, LawyerFeeType, PRACTICE_AREAS_CONST, PracticeAreasType } from "./user.types";
 
-
 const LawyerProfileSchema = t.Object({
   name: t.Optional(t.String()),
   experience: t.Optional(t.Number()),
@@ -10,6 +9,8 @@ const LawyerProfileSchema = t.Object({
   bio: t.Optional(t.String()),
   bar_number: t.Optional(t.String()),
   practice_areas: t.Optional(t.Array(t.Enum(Object.fromEntries(PRACTICE_AREAS_CONST.map(x => [x, x]))))),
+  law_firm: t.Optional(t.String()),
+  law_firm_id: t.Optional(t.Number()),
   practice_location: t.Optional(t.String()),
   practicing_courts: t.Optional(t.Array(t.String())),
   home_address: t.Optional(t.String()),

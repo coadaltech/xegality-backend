@@ -22,7 +22,7 @@ export const set_auth_cookies = (
     httpOnly: true,
     secure: true,
     sameSite: "none" as const,
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 15,
     path: "/",
     domain: domain,
     // domain: ".xegality.com",

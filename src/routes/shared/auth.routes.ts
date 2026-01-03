@@ -136,7 +136,7 @@ const auth_routes = new Elysia({ prefix: "/auth" })
   )
 
   // REFRESH TOKENS
-  .get("/refresh-tokens", async ({ cookie, set }) => {
+  .post("/refresh-tokens", async ({ cookie, set }) => {
     const refresh_token = cookie.refresh_token;
     if (!refresh_token) {
       console.log(

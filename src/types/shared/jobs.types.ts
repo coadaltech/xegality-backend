@@ -1,4 +1,5 @@
 import { t } from "elysia";
+import { PRACTICE_AREAS_CONST } from "../user.types";
 
 const JOB_TYPE_CONST = ["full_time", "part_time", "internship", "contract", "temporary", "freelance"] as const;
 const JOB_APPLICATION_STATUS_CONST = ["applied", "reviewed", "interviewed", "selected", "rejected"] as const;
@@ -10,39 +11,24 @@ const SearchJobSchema = t.Object({
   query: t.String(),
 });
 
-const PostJobSchema = t.Object({
-  title: t.String(),
-  description: t.String(),
-  location: t.String(),
-  specialization: t.String(),
-  designation: t.String(),
-  duration: t.String(),
+const JobSchema = t.Object({
+  title: t.Optional(t.String()),
+  law_firm: t.Optional(t.String()),
+  description: t.Optional(t.String()),
+  responsibilities: t.Optional(t.Array(t.String())),
+  location: t.Optional(t.String()),
+  domain: t.Optional(t.Array(t.Enum(Object.fromEntries(PRACTICE_AREAS_CONST.map(x => [x, x]))))),
+  designation: t.Optional(t.String()),
+  type: t.Optional(t.Array(t.Enum(Object.fromEntries(JOB_TYPE_CONST.map(x => [x, x]))))),
+  is_remote: t.Optional(t.Boolean()),
+  required_experience: t.Optional(t.String()),
+  required_education: t.Optional(t.String()),
+  salary_pay: t.Optional(t.String()),
   compensation_type: t.Optional(t.String()),
-  salary_amount: t.Optional(t.String()),
-  application_deadline: t.String(),
-  requirements: t.Array(t.String()),
-  benefits: t.Array(t.String()),
-});
-
-const PostInternSchema = t.Object({
-  name: t.String(),
-  email: t.String(),
-  phone: t.Number(), // Number with mode "number"
-  university: t.String(),
-  year: t.String(),
-  specialization: t.String(),
-  start_date: t.String({ format: "date-time" }), // timestamp
-  status: t.String(),
-  rating: t.Optional(t.Number()), // real
-  avatar: t.String(),
-  tasks_completed: t.Integer(),
-  hours_worked: t.Integer(),
-  performance: t.String(),
-  recent_activity: t.String(),
-  supervisor: t.String(),
-  department: t.String(),
-  contract_type: t.String(),
-  salary: t.String(),
+  duration: t.Optional(t.String()),
+  application_deadline: t.Optional(t.Date()),
+  required_skills: t.Optional(t.Array(t.String())),
+  benefits: t.Optional(t.Array(t.String())),
 });
 
 const ApplyJobSchema = t.Object({
@@ -53,8 +39,7 @@ export {
   JOB_TYPE_CONST,
   JOB_APPLICATION_STATUS_CONST,
   SearchJobSchema,
-  PostJobSchema,
-  PostInternSchema,
+  JobSchema,
   ApplyJobSchema
 }
 export type {

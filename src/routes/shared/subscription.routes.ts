@@ -35,7 +35,45 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
       const subscription = await SubscriptionService.getUserSubscription(
         store.id
       );
-      return { success: true, data: subscription };
+      
+      // Get user to check trial status
+      const user = await db
+        .select()
+        .from(user_model)
+        .where(eq(user_model.id, store.id))
+        .then((rows) => rows[0]);
+
+      const subscriptionAccess = await SubscriptionService.calculateSubscriptionAccess(
+        store.id,
+        user?.created_at || null
+      );
+
+      // Calculate trial info if user is on trial (has access but no subscription)
+      let trialInfo = null;
+      if (!subscription && subscriptionAccess.hasAccess && subscriptionAccess.expiresAt) {
+        const now = new Date();
+        const trialEndDate = new Date(subscriptionAccess.expiresAt);
+        const daysRemaining = Math.ceil(
+          (trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        // Only show trial if within 7 days
+        if (daysRemaining > 0 && daysRemaining <= 7) {
+          trialInfo = {
+            isTrial: true,
+            trialEndDate: subscriptionAccess.expiresAt.toISOString(),
+            daysRemaining: Math.max(0, daysRemaining),
+          };
+        }
+      }
+
+      return { 
+        success: true, 
+        data: {
+          subscription,
+          trialInfo
+        }
+      };
     } catch (error) {
       return { success: false, message: "Failed to fetch subscription" };
     }

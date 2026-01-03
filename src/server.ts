@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import "dotenv/config";
 import cors from "@elysiajs/cors";
-import internship_routes from "./routes/student/internship.routes";
+// import internship_routes from "./routes/student/internship.routes";
 import web_socket from "./services/socket/ws.service";
 import consumer_dashboard_routes from "./routes/consumer/dashboard.routes";
 import auth_routes from "./routes/shared/auth.routes";
@@ -13,10 +13,10 @@ import student_core_routes from "./routes/student/core.route";
 import shared_routes from "./routes/shared/connections.route";
 import chat_routes from "./routes/shared/chat.routes";
 import user_routes from "./routes/shared/user.routes";
-import lawyer_internship_routes from "./routes/lawyer/internship.routes";
+// import lawyer_internship_routes from "./routes/lawyer/internship.routes";
 import appointment_routes from "./routes/lawyer/appointments.routes";
 import google_calendar_routes from "./routes/lawyer/google-calendar.routes";
-import internship_applications_routes from "./routes/lawyer/internship-applications.routes";
+// import internship_applications_routes from "./routes/lawyer/internship-applications.routes";
 import role_management_routes from "./routes/lawyer/role-management.routes";
 import research_routes from "./routes/shared/research.routes";
 import payment_routes from "./routes/shared/payment.routes";
@@ -28,6 +28,10 @@ import { adminSubscriptionRoutes } from "./routes/admin/subscription.routes";
 import { adminUsersRoutes } from "./routes/admin/users.routes";
 import { uploadRoutes } from "./routes/shared/upload.routes";
 import ai_chat_routes from "./routes/ai/ai-chats.routes";
+import lawyer_jobs_routes from "./routes/lawyer/jobs.routes";
+import jobs_routes from "./routes/shared/jobs.routes";
+import job_applications_routes from "./routes/lawyer/job-applications.routes";
+import firm_routes from "./routes/lawyer/firm.routes";
 
 const SERVER_PORT = process.env.SERVER_PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -48,16 +52,20 @@ const app = new Elysia({
       .use(user_routes)
       .use(consumer_core_routes)
       .use(lawyer_core_routes)
+      .use(firm_routes)
       .use(student_core_routes)
       .use(consumer_dashboard_routes)
       .use(shared_routes)
       .use(ca_dashboard_routes)
-      .use(internship_routes)
-      .use(lawyer_internship_routes)
+      // .use(internship_routes)
+      // .use(lawyer_internship_routes)
       .use(appointment_routes)
       .use(google_calendar_routes)
-      .use(internship_applications_routes)
+      // .use(internship_applications_routes)
       .use(role_management_routes)
+      .use(lawyer_jobs_routes)
+      .use(jobs_routes)
+      .use(job_applications_routes)
       .use(research_routes)
       .use(payment_routes)
       .use(subscriptionRoutes)

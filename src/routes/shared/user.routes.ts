@@ -27,8 +27,6 @@ const user_routes = new Elysia({ prefix: "/user" })
       store.role as RoleType
     );
 
-    console.log("user details", user_details);
-
     set.status = user_details.code;
     return user_details;
   });

@@ -17,7 +17,7 @@ export const authenticate_jwt = (access_token: string) => {
     return {
       success: false,
       code: 401,
-      message: "Inalid Access Token",
+      message: "Invalid Access Token",
     };
   }
 };
@@ -34,7 +34,7 @@ export const app_middleware = ({
   if (!access_token) {
     return {
       success: false,
-      code: 404,
+      code: 401,
       message: "No Access Token in Cookies",
     };
   }
@@ -51,8 +51,6 @@ export const app_middleware = ({
       message: middleware_response.message,
     };
   }
-
-  console.log("role", middleware_response.data.role);
 
   if (allowed && !allowed.includes(middleware_response.data.role)) {
     return {
