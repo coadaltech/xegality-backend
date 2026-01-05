@@ -37,37 +37,68 @@ const hash_password = async (password: string): Promise<string> => {
 };
 
 const generate_jwt = (
-  id: number,
-  role: string,
-  is_profile_complete?: boolean,
-  has_subscription_access?: boolean,
-  subscription_expires_at?: Date | null
+  payload:
+    {
+      id: number,
+      role: string,
+      is_profile_complete?: boolean,
+      has_subscription_access?: boolean,
+      subscription_expires_at?: Date | null
+      token_type: 'access' | 'refresh'
+    }
 ) => {
   return jwt.sign(
     {
-      id,
-      role,
-      is_profile_complete: is_profile_complete || false,
-      has_subscription_access: has_subscription_access || false,
-      subscription_expires_at: subscription_expires_at
-        ? subscription_expires_at.toISOString()
+      id: payload.id,
+      role: payload.role,
+      is_profile_complete: payload.is_profile_complete || false,
+      has_subscription_access: payload.has_subscription_access || false,
+      subscription_expires_at: payload.subscription_expires_at
+        ? payload.subscription_expires_at.toISOString()
         : null,
     },
     process.env.ACCESS_KEY || "heymama",
     {
-      expiresIn: "1d",
+      expiresIn: payload.token_type === 'access' ? "15m" : "7d",
     }
   );
 };
 
+// const generate_refresh_jwt = (id: number, role: string) => {
+//   return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
+//     expiresIn: "7d",
+//   });
+// };
+
+// const generate_refresh_jwt = (
+//   payload:
+//     {
+//       id: number,
+//       role: string,
+//       is_profile_complete?: boolean,
+//       has_subscription_access?: boolean,
+//       subscription_expires_at?: Date | null
+//     }
+// ) => {
+//   return jwt.sign(
+//     {
+//       id: payload.id,
+//       role: payload.role,
+//       is_profile_complete: payload.is_profile_complete || false,
+//       has_subscription_access: payload.has_subscription_access || false,
+//       subscription_expires_at: payload.subscription_expires_at
+//         ? payload.subscription_expires_at.toISOString()
+//         : null,
+//     },
+//     process.env.ACCESS_KEY || "heymama",
+//     {
+//       expiresIn: "7d",
+//     }
+//   );
+// };
+
 const verify_jwt = (token: string) => {
   return jwt.verify(token, process.env.ACCESS_KEY || "heymama");
-};
-
-const generate_refresh_jwt = (id: number, role: string) => {
-  return jwt.sign({ id, role }, process.env.ACCESS_KEY || "heymama", {
-    expiresIn: "7d",
-  });
 };
 
 const compare_password = async (password: string, hashed_password: string) => {
@@ -120,7 +151,7 @@ export {
   random_otp,
   hash_password,
   generate_jwt,
-  generate_refresh_jwt,
+  // generate_refresh_jwt,
   verify_jwt,
   compare_password,
   verify_refresh_token,

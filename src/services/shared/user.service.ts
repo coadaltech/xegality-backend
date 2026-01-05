@@ -5,7 +5,6 @@ import { RoleType } from "../../types/user.types";
 import {
   create_unique_id,
   generate_jwt,
-  generate_refresh_jwt,
   hash_password,
 } from "@/utils/general.utils";
 import { consumer_profile_model } from "@/models/consumer/consumer.model";
@@ -107,13 +106,25 @@ export const create_user = async (
     trialEndDate.setDate(trialEndDate.getDate() + 7);
 
     const access_token = generate_jwt(
-      user_id,
-      role,
-      false, // new user, profile not complete
-      true, // has access (7-day trial)
-      trialEndDate
+      {
+        id: user_id,
+        role,
+        is_profile_complete: false,
+        has_subscription_access: true,
+        subscription_expires_at: trialEndDate,
+        token_type: "access",
+      }
     );
-    const refresh_token = generate_refresh_jwt(user_id, role);
+    const refresh_token = generate_jwt(
+      {
+        id: user_id,
+        role,
+        is_profile_complete: false,
+        has_subscription_access: true,
+        subscription_expires_at: trialEndDate,
+        token_type: "refresh",
+      }
+    );
 
     await db
       .insert(user_model)

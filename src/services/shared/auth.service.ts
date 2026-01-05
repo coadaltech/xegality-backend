@@ -6,7 +6,6 @@ import {
   compare_password,
   create_unique_id,
   generate_jwt,
-  generate_refresh_jwt,
   random_otp,
   verify_refresh_token,
   hash_password,
@@ -71,13 +70,26 @@ const handle_login = async (password: string, value: number | string) => {
       );
 
     const access_token = generate_jwt(
-      user.id,
-      user.role,
-      user.is_profile_complete || false,
-      subscriptionAccess.hasAccess,
-      subscriptionAccess.expiresAt
+      {
+        id: user.id,
+        role: user.role,
+        is_profile_complete: user.is_profile_complete || false,
+        has_subscription_access: subscriptionAccess.hasAccess,
+        subscription_expires_at: subscriptionAccess.expiresAt,
+        token_type: "access",
+      }
     );
-    const refresh_token = generate_refresh_jwt(user.id, user.role);
+    const refresh_token =
+      generate_jwt(
+        {
+          id: user.id,
+          role: user.role,
+          is_profile_complete: user.is_profile_complete || false,
+          has_subscription_access: subscriptionAccess.hasAccess,
+          subscription_expires_at: subscriptionAccess.expiresAt,
+          token_type: "refresh",
+        }
+      );
 
     await db.update(user_model).set({ refresh_token }).where(whereCondition);
 
@@ -134,13 +146,26 @@ const create_tokens = async (
       );
 
     const new_access_token = generate_jwt(
-      id,
-      role,
-      is_profile_complete,
-      subscriptionAccess.hasAccess,
-      subscriptionAccess.expiresAt
+      {
+        id,
+        role,
+        is_profile_complete,
+        has_subscription_access: subscriptionAccess.hasAccess,
+        subscription_expires_at: subscriptionAccess.expiresAt,
+        token_type: "access",
+      }
     );
-    const new_refresh_token = generate_refresh_jwt(id, role);
+    const new_refresh_token = generate_jwt(
+      {
+        id,
+        role,
+        is_profile_complete,
+        has_subscription_access: subscriptionAccess.hasAccess,
+        subscription_expires_at: subscriptionAccess.expiresAt,
+        token_type: "refresh",
+      }
+    );
+
     await db.update(user_model).set({ refresh_token: new_refresh_token });
     return {
       success: true,
@@ -302,13 +327,25 @@ const handle_google_callback = async ({ query, set }: any) => {
           exisiting_user.created_at
         );
 
-      const refresh_token = generate_refresh_jwt(exisiting_user.id, role);
+      const refresh_token = generate_jwt(
+        {
+          id: exisiting_user.id,
+          role: role,
+          is_profile_complete: exisiting_user.is_profile_complete || false,
+          has_subscription_access: subscriptionAccess.hasAccess,
+          subscription_expires_at: subscriptionAccess.expiresAt,
+          token_type: "refresh",
+        }
+      );
       const access_token = generate_jwt(
-        exisiting_user.id,
-        role,
-        exisiting_user.is_profile_complete || false,
-        subscriptionAccess.hasAccess,
-        subscriptionAccess.expiresAt
+        {
+          id: exisiting_user.id,
+          role: role,
+          is_profile_complete: exisiting_user.is_profile_complete || false,
+          has_subscription_access: subscriptionAccess.hasAccess,
+          subscription_expires_at: subscriptionAccess.expiresAt,
+          token_type: "access",
+        }
       );
       await db
         .update(user_model)
@@ -335,13 +372,25 @@ const handle_google_callback = async ({ query, set }: any) => {
       const trialEndDate = new Date(now);
       trialEndDate.setDate(trialEndDate.getDate() + 7);
 
-      const refresh_token = generate_refresh_jwt(user_id, role);
+      const refresh_token = generate_jwt(
+        {
+          id: user_id,
+          role: role,
+          is_profile_complete: false,
+          has_subscription_access: true,
+          subscription_expires_at: trialEndDate,
+          token_type: "refresh",
+        }
+      )
       const access_token = generate_jwt(
-        user_id,
-        role,
-        false, // new user, profile not complete
-        true, // has access (7-day trial)
-        trialEndDate
+        {
+          id: user_id,
+          role: role,
+          is_profile_complete: false,
+          has_subscription_access: true,
+          subscription_expires_at: trialEndDate,
+          token_type: "access",
+        }
       );
 
       await db.insert(user_model).values({
@@ -400,13 +449,25 @@ const handle_login_by_token = async (payload: JwtPayload) => {
       );
 
     const access_token = generate_jwt(
-      id,
-      role,
-      user.is_profile_complete || false,
-      subscriptionAccess.hasAccess,
-      subscriptionAccess.expiresAt
+      {
+        id,
+        role,
+        is_profile_complete: user.is_profile_complete || false,
+        has_subscription_access: subscriptionAccess.hasAccess,
+        subscription_expires_at: subscriptionAccess.expiresAt,
+        token_type: "access",
+      }
     );
-    const refresh_token = generate_refresh_jwt(id, role);
+    const refresh_token = generate_jwt(
+      {
+        id,
+        role,
+        is_profile_complete: user.is_profile_complete || false,
+        has_subscription_access: subscriptionAccess.hasAccess,
+        subscription_expires_at: subscriptionAccess.expiresAt,
+        token_type: "refresh",
+      }
+    );
 
     const updated_user = await db
       .update(user_model)

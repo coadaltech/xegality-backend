@@ -35,7 +35,7 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
       const subscription = await SubscriptionService.getUserSubscription(
         store.id
       );
-      
+
       // Get user to check trial status
       const user = await db
         .select()
@@ -56,7 +56,7 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
         const daysRemaining = Math.ceil(
           (trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
         );
-        
+
         // Only show trial if within 7 days
         if (daysRemaining > 0 && daysRemaining <= 7) {
           trialInfo = {
@@ -67,8 +67,8 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
         }
       }
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         data: {
           subscription,
           trialInfo
@@ -149,17 +149,20 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
             );
 
           const new_access_token = generate_jwt(
-            store.id,
-            store.role,
-            user.is_profile_complete || false,
-            subscriptionAccess.hasAccess,
-            subscriptionAccess.expiresAt
+            {
+              id: store.id,
+              role: store.role,
+              is_profile_complete: user.is_profile_complete || false,
+              has_subscription_access: subscriptionAccess.hasAccess,
+              subscription_expires_at: subscriptionAccess.expiresAt,
+              token_type: "access",
+            }
           );
 
           // Update the access token cookie
           set_auth_cookies(cookie, new_access_token, user.refresh_token);
 
-          console.log("verify payment", subscription);
+          // console.log("verify payment", subscription);
           return {
             success: true,
             data: {
@@ -170,7 +173,7 @@ export const subscriptionRoutes = new Elysia({ prefix: "/subscriptions" })
           };
         }
 
-        console.log("verify payment", subscription);
+        // console.log("verify payment", subscription);
         return {
           success: true,
           data: subscription,

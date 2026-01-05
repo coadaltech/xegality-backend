@@ -19,7 +19,7 @@ import {
 } from "../../types/auth.types";
 import { verify_access_token } from "@/utils/general.utils";
 import { set_auth_cookies, clear_auth_cookies } from "@/utils/cookie.utils";
-import { generate_jwt, generate_refresh_jwt } from "@/utils/general.utils";
+import { generate_jwt } from "@/utils/general.utils";
 import { eq } from "drizzle-orm";
 import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
@@ -333,13 +333,25 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         );
 
       const access_token = generate_jwt(
-        user.id,
-        user.role,
-        user.is_profile_complete || false,
-        subscriptionAccess.hasAccess,
-        subscriptionAccess.expiresAt
+        {
+          id: user.id,
+          role: user.role,
+          is_profile_complete: user.is_profile_complete || false,
+          has_subscription_access: subscriptionAccess.hasAccess,
+          subscription_expires_at: subscriptionAccess.expiresAt,
+          token_type: "access",
+        }
       );
-      const refresh_token = generate_refresh_jwt(user.id, user.role);
+      const refresh_token = generate_jwt(
+        {
+          id: user.id,
+          role: user.role,
+          is_profile_complete: user.is_profile_complete || false,
+          has_subscription_access: subscriptionAccess.hasAccess,
+          subscription_expires_at: subscriptionAccess.expiresAt,
+          token_type: "refresh",
+        }
+      );
 
       await db
         .update(user_model)
