@@ -16,7 +16,7 @@ export const authenticate_jwt = (access_token: string) => {
   } catch (err) {
     return {
       success: false,
-      code: 401,
+      code: 498,
       message: "Invalid Access Token",
     };
   }
@@ -34,7 +34,7 @@ export const app_middleware = ({
   if (!access_token) {
     return {
       success: false,
-      code: 401,
+      code: 499,
       message: "No Access Token in Cookies",
     };
   }
