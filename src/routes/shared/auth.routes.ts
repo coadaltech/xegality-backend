@@ -235,7 +235,6 @@ const auth_routes = new Elysia({ prefix: "/auth" })
   .post(
     "/login",
     async ({ body, set, cookie, request, headers }) => {
-      console.log(headers)
       const ip = get_client_ip(request, headers);
 
       const existing_token = cookie["access_token"]?.value;
