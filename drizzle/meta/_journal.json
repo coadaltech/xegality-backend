@@ -50,6 +50,27 @@
       "when": 1767434415946,
       "tag": "0006_ambiguous_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1767875631348,
+      "tag": "0007_sleepy_firelord",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1767876794363,
+      "tag": "0008_closed_malice",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1767877411079,
+      "tag": "0009_keen_prima",
+      "breakpoints": true
     }
   ]
 }

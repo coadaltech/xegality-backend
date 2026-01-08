@@ -6,6 +6,8 @@ import {
   handle_login_by_token,
   handle_login,
   handle_google_callback,
+  check_ip_ban,
+  record_failed_attempt,
 } from "../../services/shared/auth.service";
 import { get_consent_url } from "../../services/shared/google.service";
 import { verify_otp } from "../../services/shared/otp.service";
@@ -25,11 +27,29 @@ import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
 import { SubscriptionService } from "../../services/shared/subscription.service";
 
+const get_client_ip = (request?: Request, headers?: Record<string, any>) => {
+  const forwarded =
+    request?.headers?.get("x-forwarded-for") || headers?.["x-forwarded-for"];
+  const realIp =
+    request?.headers?.get("x-real-ip") || headers?.["x-real-ip"];
+  const cfIp =
+    request?.headers?.get("cf-connecting-ip") || headers?.["cf-connecting-ip"];
+  const forwardedHeader =
+    typeof forwarded === "string" ? forwarded.split(",")[0].trim() : undefined;
+  return (
+    forwardedHeader ||
+    (typeof realIp === "string" ? realIp : undefined) ||
+    (typeof cfIp === "string" ? cfIp : undefined) ||
+    "unknown"
+  );
+};
+
 const auth_routes = new Elysia({ prefix: "/auth" })
+
   // SIGNUP
   .post(
     "/generate-otp",
-    async ({ body, set }) => {
+    async ({ body, set, request, headers }) => {
       const { phone, email } = body;
       if (!phone && !email) {
         set.status = 400;
@@ -53,20 +73,38 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           message: "Value is neither Phone nor Email",
         };
       }
-      const otp_response = await otp_cycle(value);
-      console.log(otp_response);
-      if (otp_response.code == 200 && otp_response.success) {
-        set.status = otp_response.code;
+      const forwarded =
+        request?.headers?.get("x-forwarded-for") ||
+        headers?.["x-forwarded-for"];
+      const realIp = request?.headers?.get("x-real-ip") || headers?.["x-real-ip"];
+      const ip =
+        typeof forwarded === "string"
+          ? forwarded.split(",")[0].trim()
+          : typeof realIp === "string"
+            ? realIp
+            : undefined;
+
+      const otp_response = await otp_cycle(value, ip, body?.purpose);
+      const statusCode = otp_response?.code ?? 500;
+      set.status = statusCode;
+      if (otp_response?.success) {
         console.log(`[SERVER]   OTP Send : ${new Date().toLocaleString()}`);
-        return otp_response;
+      } else {
+        console.log(
+          `[SERVER]   OTP Send Failed : ${new Date().toLocaleString()}`
+        );
       }
+      return otp_response;
     },
     { body: GenerateOtpSchema }
   )
 
   .post(
     "/verify-signup-otp",
-    async ({ body, set, cookie }) => {
+    async ({ body, set, cookie, headers }) => {
+      // console.log("------------------- signup req -------------------")
+      // console.log(headers);
+
       const { phone, email, name, password, role, otp } = body;
       if (!phone && !email) {
         set.status = 400;
@@ -196,7 +234,10 @@ const auth_routes = new Elysia({ prefix: "/auth" })
   // LOGIN
   .post(
     "/login",
-    async ({ body, set, cookie }) => {
+    async ({ body, set, cookie, request, headers }) => {
+      console.log(headers)
+      const ip = get_client_ip(request, headers);
+
       const existing_token = cookie["access_token"]?.value;
 
       if (existing_token) {
@@ -248,6 +289,21 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           message: "Value is neither Phone nor Email",
         };
       }
+
+      const ipBan = await check_ip_ban(ip, "login-password");
+      if (ipBan?.banned) {
+        set.status = 429;
+        return {
+          success: false,
+          code: 429,
+          message: "Too many failed login attempts. IP banned for 24 hours.",
+          data: {
+            banned_until: ipBan.banned_until,
+            reason: ipBan.reason,
+          },
+        };
+      }
+
       const response = await handle_login(body.password, value);
       if (
         response.success &&
@@ -263,6 +319,18 @@ const auth_routes = new Elysia({ prefix: "/auth" })
           `[SERVER]   Set Tokens to Cookies : ${new Date().toLocaleString()}`
         );
       }
+      if (!response.success) {
+        const res = await record_failed_attempt(ip, "login-password");
+        if (res.banned) {
+          set.status = 429;
+          return {
+            success: false,
+            code: 429,
+            message: "Too many failed login attempts. IP banned for 24 hours.",
+            data: { banned_until: res.banned_until },
+          };
+        }
+      }
       set.status = response?.code;
       return response;
     },
@@ -271,7 +339,9 @@ const auth_routes = new Elysia({ prefix: "/auth" })
 
   .post(
     "/verify-login-otp",
-    async ({ body, set, cookie }) => {
+    async ({ body, set, cookie, request, headers }) => {
+      const ip = get_client_ip(request, headers);
+
       const { phone, email } = body;
       if (!phone && !email) {
         set.status = 400;
@@ -296,8 +366,32 @@ const auth_routes = new Elysia({ prefix: "/auth" })
         };
       }
 
+      const ipBan = await check_ip_ban(ip, "login-otp-verify");
+      if (ipBan?.banned) {
+        set.status = 429;
+        return {
+          success: false,
+          code: 429,
+          message: "Too many invalid OTP attempts. IP banned for 24 hours.",
+          data: {
+            banned_until: ipBan.banned_until,
+            reason: ipBan.reason,
+          },
+        };
+      }
+
       const otpResponse = await verify_otp(body.otp, value);
       if (otpResponse.success == false) {
+        const res = await record_failed_attempt(ip, "login-otp-verify");
+        if (res.banned) {
+          set.status = 429;
+          return {
+            success: false,
+            code: 429,
+            message: "Too many invalid OTP attempts. IP banned for 24 hours.",
+            data: { banned_until: res.banned_until },
+          };
+        }
         set.status = otpResponse.code;
         console.log(
           `[SERVER]   OTP is Invalid : ${new Date().toLocaleString()}`

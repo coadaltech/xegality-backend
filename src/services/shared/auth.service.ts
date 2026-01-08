@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import db from "../../config/db";
 import { user_model } from "../../models/shared/user.model";
 import { RoleType } from "../../types/user.types";
@@ -14,8 +14,145 @@ import { get_tokens, get_user_info } from "./google.service";
 import { JwtPayload } from "jsonwebtoken";
 import { otp_model } from "../../models/shared/otp.model";
 import { sendSMS, generateOTPSmsMessage } from "./sms.service";
+import { OTP_EXPIRY_MS } from "./otp.service";
 import { sendOTP as sendEmailOTP } from "../nodemailer";
 import { SubscriptionService } from "./subscription.service";
+import { otp_ip_rate_limit_model } from "../../models/shared/otp-ip-rate-limit.model";
+
+const MAX_DAILY_OTP_ATTEMPTS = 5;
+const OTP_IP_BAN_THRESHOLD = 10;
+const OTP_IP_BAN_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const OTP_IP_BAN_DURATION_MS = 24 * 60 * 60 * 1000; // 1 day
+
+type RateLimitPurpose = "otp-login-request" | "login-password" | "login-otp-verify";
+
+const check_ip_ban = async (ip?: string | null, purpose?: RateLimitPurpose) => {
+  if (!ip || !purpose) return null;
+  const now = new Date();
+  const record = (
+    await db
+      .select()
+      .from(otp_ip_rate_limit_model)
+      .where(
+        and(
+          eq(otp_ip_rate_limit_model.ip, ip),
+          eq(otp_ip_rate_limit_model.purpose, purpose)
+        )
+      )
+      .limit(1)
+  )[0];
+
+  const bannedUntil =
+    record?.banned_until && new Date(record.banned_until as any);
+  if (bannedUntil && bannedUntil.getTime() > now.getTime()) {
+    return {
+      banned: true,
+      banned_until: bannedUntil,
+      reason:
+        record?.reason ||
+        "Exceeded request limit (20+ attempts within 5 minutes).",
+    };
+  }
+  return null;
+};
+
+const record_failed_attempt = async (
+  ip?: string | null,
+  purpose?: RateLimitPurpose
+) => {
+  if (!purpose) return { banned: false };
+  const safeIp = ip || "unknown";
+  const now = new Date();
+  const existing = (
+    await db
+      .select()
+      .from(otp_ip_rate_limit_model)
+      .where(
+        and(
+          eq(otp_ip_rate_limit_model.ip, safeIp),
+          eq(otp_ip_rate_limit_model.purpose, purpose)
+        )
+      )
+      .limit(1)
+  )[0];
+
+  const windowStart = existing?.window_start
+    ? new Date(existing.window_start as any)
+    : now;
+  const inWindow = now.getTime() - windowStart.getTime() < OTP_IP_BAN_WINDOW_MS;
+  const nextCount = inWindow ? (existing?.count ?? 0) + 1 : 1;
+
+  if (nextCount >= OTP_IP_BAN_THRESHOLD) {
+    const banUntilDate = new Date(now.getTime() + OTP_IP_BAN_DURATION_MS);
+    if (existing) {
+      await db
+        .update(otp_ip_rate_limit_model)
+        .set({
+          count: nextCount,
+          window_start: inWindow ? windowStart : now,
+          last_attempt: now,
+          banned_until: banUntilDate,
+          reason: "Exceeded request limit (20+ attempts within 5 minutes).",
+        })
+        .where(
+          and(
+            eq(otp_ip_rate_limit_model.ip, safeIp),
+            eq(otp_ip_rate_limit_model.purpose, purpose)
+          )
+        );
+    } else {
+      await db.insert(otp_ip_rate_limit_model).values({
+        ip: safeIp,
+        purpose,
+        count: nextCount,
+        window_start: now,
+        last_attempt: now,
+        banned_until: banUntilDate,
+        reason: "Exceeded request limit (20+ attempts within 5 minutes).",
+      });
+    }
+    return { banned: true, banned_until: banUntilDate };
+  }
+
+  if (existing) {
+    await db
+      .update(otp_ip_rate_limit_model)
+      .set({
+        count: nextCount,
+        window_start: inWindow ? windowStart : now,
+        last_attempt: now,
+        banned_until: null,
+        reason: null,
+      })
+      .where(
+        and(
+          eq(otp_ip_rate_limit_model.ip, safeIp),
+          eq(otp_ip_rate_limit_model.purpose, purpose)
+        )
+      );
+  } else {
+    await db.insert(otp_ip_rate_limit_model).values({
+      ip: safeIp,
+      purpose,
+      count: nextCount,
+      window_start: now,
+      last_attempt: now,
+    });
+  }
+
+  return { banned: false };
+};
+
+const isSameDay = (date?: Date | string | null) => {
+  if (!date) return false;
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  const now = new Date();
+  return (
+    parsedDate.getFullYear() === now.getFullYear() &&
+    parsedDate.getMonth() === now.getMonth() &&
+    parsedDate.getDate() === now.getDate()
+  );
+};
 
 const handle_login = async (password: string, value: number | string) => {
   try {
@@ -508,91 +645,227 @@ const handle_login_by_token = async (payload: JwtPayload) => {
     };
   }
 };
-const otp_cycle = async (value: string | number) => {
+const otp_cycle = async (
+  value: string | number,
+  ip?: string | null,
+  purpose?: "login" | "signup"
+) => {
   const otp = random_otp();
-  console.log("otp", otp);
+  const now = new Date();
+  const isPhone = typeof value === "number";
+  const whereCondition = isPhone
+    ? eq(otp_model.phone, value)
+    : eq(otp_model.email, value);
 
-  if (typeof value === "number") {
-    // Handle phone login
-    const existing = (
-      await db
-        .select()
-        .from(otp_model)
-        .where(eq(otp_model.phone, value))
-        .limit(1)
-    )[0];
+  try {
+    // IP-based ban logic for login OTP flow
+    if (ip && purpose === "login") {
+      const ipRecord = (
+        await db
+          .select()
+          .from(otp_ip_rate_limit_model)
+          .where(
+            and(
+              eq(otp_ip_rate_limit_model.ip, ip),
+              eq(otp_ip_rate_limit_model.purpose, "otp-login-request")
+            )
+          )
+          .limit(1)
+      )[0];
 
-    if (existing) {
-      await db.update(otp_model).set({ otp }).where(eq(otp_model.phone, value));
-    } else {
-      const otp_id = create_unique_id();
-      await db.insert(otp_model).values({
-        id: otp_id,
-        otp,
-        phone: value,
-      });
+      const bannedUntil =
+        ipRecord?.banned_until && new Date(ipRecord.banned_until);
+      if (bannedUntil && bannedUntil.getTime() > now.getTime()) {
+        return {
+          success: false,
+          code: 429,
+          message:
+            "Too many OTP requests. Your IP is temporarily banned for 24 hours.",
+          data: {
+            banned_until: bannedUntil,
+            reason:
+              ipRecord?.reason ??
+              "Exceeded OTP request limit (20+ in 5 minutes).",
+          },
+        };
+      }
+
+      const windowStart = ipRecord?.window_start
+        ? new Date(ipRecord.window_start)
+        : now;
+      const inWindow = now.getTime() - windowStart.getTime() < OTP_IP_BAN_WINDOW_MS;
+      const nextIpCount = inWindow ? (ipRecord?.count ?? 0) + 1 : 1;
+
+      // Apply or extend ban if threshold reached
+      if (nextIpCount >= OTP_IP_BAN_THRESHOLD) {
+        const banUntilDate = new Date(now.getTime() + OTP_IP_BAN_DURATION_MS);
+        if (ipRecord) {
+          await db
+            .update(otp_ip_rate_limit_model)
+            .set({
+              count: nextIpCount,
+              window_start: inWindow ? windowStart : now,
+              last_attempt: now,
+              banned_until: banUntilDate,
+              reason: "Exceeded OTP request limit (20+ in 5 minutes).",
+            })
+            .where(
+              and(
+                eq(otp_ip_rate_limit_model.ip, ip),
+                eq(otp_ip_rate_limit_model.purpose, "otp-login-request")
+              )
+            );
+        } else {
+          await db.insert(otp_ip_rate_limit_model).values({
+            ip,
+            purpose: "otp-login-request",
+            count: nextIpCount,
+            window_start: now,
+            last_attempt: now,
+            banned_until: banUntilDate,
+            reason: "Exceeded OTP request limit (20+ in 5 minutes).",
+          });
+        }
+
+        return {
+          success: false,
+          code: 429,
+          message:
+            "Too many OTP requests. Your IP is temporarily banned for 24 hours.",
+          data: {
+            banned_until: banUntilDate,
+            reason: "Exceeded OTP request limit (20+ in 5 minutes).",
+          },
+        };
+      }
+
+      // Update rate record for current attempt (non-banned)
+      if (ipRecord) {
+        await db
+          .update(otp_ip_rate_limit_model)
+          .set({
+            count: nextIpCount,
+            window_start: inWindow ? windowStart : now,
+            last_attempt: now,
+            banned_until: null,
+            reason: null,
+          })
+          .where(
+            and(
+              eq(otp_ip_rate_limit_model.ip, ip),
+              eq(otp_ip_rate_limit_model.purpose, "otp-login-request")
+            )
+          );
+      } else {
+        await db.insert(otp_ip_rate_limit_model).values({
+          ip,
+          purpose: "otp-login-request",
+          count: nextIpCount,
+          window_start: now,
+          last_attempt: now,
+        });
+      }
     }
 
-    // Send SMS with OTP
-    const message = generateOTPSmsMessage(otp);
-    const smsResponse = await sendSMS({
-      number: value.toString(),
-      message,
-    });
+    const existing = (
+      await db.select().from(otp_model).where(whereCondition).limit(1)
+    )[0];
 
-    if (!smsResponse.success) {
-      console.error("[SMS Service] Failed to send OTP SMS:", smsResponse.error);
+    const nextAttempts =
+      existing && isSameDay(existing.created_at)
+        ? (existing.attempts ?? 0) + 1
+        : 1;
+
+    if (nextAttempts > MAX_DAILY_OTP_ATTEMPTS) {
       return {
         success: false,
-        code: 500,
-        message: `Failed to send OTP via SMS: ${smsResponse.error}`,
+        code: 429,
+        message: "Daily OTP limit reached. Please try again tomorrow.",
+        data: {
+          attempts_left: 0,
+          expires_in_ms: OTP_EXPIRY_MS,
+        },
       };
+    }
+
+    if (isPhone) {
+      const message = generateOTPSmsMessage(otp);
+      const smsResponse = await sendSMS({
+        number: value.toString(),
+        message,
+      });
+
+      if (!smsResponse.success) {
+        console.error(
+          "[SMS Service] Failed to send OTP SMS:",
+          smsResponse.error
+        );
+        return {
+          success: false,
+          code: 500,
+          message: `Failed to send OTP via SMS: ${smsResponse.error}`,
+        };
+      }
+    } else {
+      const emailResponse = await sendEmailOTP(
+        value.toString(),
+        otp.toString()
+      );
+
+      console.log("email response", emailResponse);
+
+      if (!emailResponse || !emailResponse.success) {
+        console.error("[Email Service] Failed to send OTP email");
+        return {
+          success: false,
+          code: 500,
+          message: "Failed to send OTP via email",
+        };
+      }
+    }
+
+    if (existing) {
+      await db
+        .update(otp_model)
+        .set({
+          otp,
+          attempts: nextAttempts,
+          created_at: now,
+        })
+        .where(whereCondition);
+    } else {
+      const otp_id = create_unique_id();
+      const insertPayload: any = {
+        id: otp_id,
+        otp,
+        attempts: nextAttempts,
+        created_at: now,
+      };
+
+      if (isPhone) {
+        insertPayload.phone = value;
+      } else {
+        insertPayload.email = value;
+      }
+
+      await db.insert(otp_model).values(insertPayload);
     }
 
     return {
       success: true,
       code: 200,
-      message: `OTP sent to phone: ${value}`,
+      message: `OTP sent to ${isPhone ? "phone" : "email"}: ${value}`,
+      data: {
+        attempts_left: Math.max(0, MAX_DAILY_OTP_ATTEMPTS - nextAttempts),
+        expires_in_ms: OTP_EXPIRY_MS,
+      },
     };
-  } else {
-    // Handle email login
-    const existing = (
-      await db
-        .select()
-        .from(otp_model)
-        .where(eq(otp_model.email, value))
-        .limit(1)
-    )[0];
-
-    if (existing) {
-      await db.update(otp_model).set({ otp }).where(eq(otp_model.email, value));
-    } else {
-      const otp_id = create_unique_id();
-      await db.insert(otp_model).values({
-        id: otp_id,
-        otp,
-        email: value,
-      });
-    }
-
-    // Send email with OTP
-    const emailResponse = await sendEmailOTP(value.toString(), otp.toString());
-
-    console.log("email response", emailResponse);
-
-    if (!emailResponse || !emailResponse.success) {
-      console.error("[Email Service] Failed to send OTP email");
-      return {
-        success: false,
-        code: 500,
-        message: "Failed to send OTP via email",
-      };
-    }
-
+  } catch (error: any) {
+    console.error("Error in otp_cycle:", error);
     return {
-      success: true,
-      code: 200,
-      message: `OTP sent to email: ${value}`,
+      success: false,
+      code: 500,
+      message: "Failed to process OTP request",
     };
   }
 };
@@ -760,4 +1033,6 @@ export {
   verify_token_with_db,
   change_password,
   soft_delete_account,
+  check_ip_ban,
+  record_failed_attempt,
 };

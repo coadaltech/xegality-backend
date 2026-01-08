@@ -32,6 +32,7 @@ const GoogleCallbackSchema = t.Object({
 const GenerateOtpSchema = t.Object({
   phone: t.Optional(t.Number()),
   email: t.Optional(t.String()),
+  purpose: t.Optional(t.Union([t.Literal("login"), t.Literal("signup")])),
 });
 
 const LoginSchema = t.Object({
